@@ -1,0 +1,88 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>{% block title %}Chill Tuna - 페르소나{% endblock %}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="{% static 'img/brand.png' %}" rel="icon">
+  <link href="{% static 'css/base.css' %}" rel="stylesheet">
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+  <div class="layout">
+
+    <!-- ✅ 사이드바 -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        🌀 <span class="logo-text">Chill Tuna</span>
+      </div>
+
+      <div class="sidebar-title">My Chatbots</div>
+      <button class="sidebar-btn active">🌍 새 채팅</button>
+      <button class="sidebar-btn">🔍 채팅 검색</button>
+
+      <hr class="divider">
+
+      <div class="recent-section">
+        <div class="recent-title">Recent Chats</div>
+        <ul class="chat-list">
+          <li class="chat-item">
+            <div class="chat-icon-circle">💬</div>
+            <div class="chat-info">
+              <div class="chat-badge">VIP + 웹방추구형</div>
+              <div class="chat-name">페르소나 1 - 박동현</div>
+            </div>
+          </li>
+          <li class="chat-item">
+            <div class="chat-icon-circle">💬</div>
+            <div class="chat-info">
+              <div class="chat-badge">우수고객</div>
+              <div class="chat-badge">가족+채식취향</div>
+              <div class="chat-name">페르소나 2 - 박진성</div>
+            </div>
+          </li>
+          <li class="chat-item">
+            <div class="chat-icon-circle">💬</div>
+            <div class="chat-info">
+              <div class="chat-badge">경험치2등급</div>
+              <div class="chat-name">페르소나 3 - 주용곤</div>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </aside>
+
+    <!-- ✅ 메인 콘텐츠 -->
+    <main class="main-content">
+
+      <!-- 본문 헤더 -->
+      <div class="main-header">
+        <select class="model-selector">
+          <option>gpt-4o-mini</option>
+          <option>gpt-3.5-turbo</option>
+          <option>exaone-v1</option>
+        </select>
+        <div class="user-auth">
+          {% if user.is_authenticated %}
+            <span>안녕하세요, {{ user.username }}님!</span>
+            <img src="{% static 'persona/profile.png' %}" alt="프로필" class="profile-img">
+            <a href="{% url 'users:logout' %}">로그아웃</a>
+          {% else %}
+            <a href="{% url 'users:login' %}">로그인</a>
+            <a href="{% url 'users:signup' %}">회원가입</a>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- 본문 카드 -->
+      <div class="card">
+        {% block content %}
+        {% endblock %}
+      </div>
+
+    </main>
+  </div>
+</body>
+</html>

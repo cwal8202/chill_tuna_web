@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_head %}
+  <link href="{% static 'css/chat/chat.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block title %}페르소나 채팅{% endblock %}
+
+{% block content %}
+<div class="chat-wrapper">
+
+  <!-- 🔹 페르소나 정보 -->
+  <div class="persona-info">
+    <div class="persona-header">🧠 <strong>페르소나{{ persona.id }} - {{ persona.name }}</strong></div>
+    <div class="persona-tags">
+      <div>{{ persona.age_group }}, {{ persona.gender }}, {{ persona.family_structure }}</div>
+      <div>{{ persona.purchase_pattern|join:", " }}</div>
+      <div>{{ persona.customer_value }}</div>
+      <div>{{ persona.lifestyle|join:", " }}</div>
+    </div>
+  </div>
+
+  <!-- 🔹 채팅 메시지 목록 -->
+  {% if chat_messages %}
+    {% for msg in chat_messages %}
+      <div class="chat-row {% if msg.sender == 'user' %}user{% else %}ai{% endif %}">
+        <div class="chat-bubble">{{ msg.message }}</div>
+      </div>
+    {% endfor %}
+  {% else %}
+    <!-- 초기 안내 메시지 -->
+    <div class="chat-system-msg">
+      어떤 비즈니스 시뮬레이션을 원하시나요?<br>
+      신제품, 기존제품에 대한 구매의향을 물어보세요.<br>
+      또는 어떤 프로모션을 했을 때 이 고객이 구매할 의향이 생길지 물어 볼 수 있습니다.
+    </div>
+  {% endif %}
+
+  <!-- 🔹 입력창 -->
+  <div class="chat-input-container">
+    <div class="chat-input-box">
+      <input type="text" class="chat-input" placeholder="메시지를 입력하세요...">
+      <button class="chat-send-btn">📤</button>
+    </div>
+    <div class="chat-footer-note">
+      Chill Tuna 비즈니스 시뮬레이터는 실수를 할 수 있습니다.<br>
+      참고용으로 사용하세요.
+    </div>
+  </div>
+
+</div>
+{% endblock %}

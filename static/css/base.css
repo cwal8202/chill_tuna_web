@@ -1,0 +1,174 @@
+body {
+  margin: 0;
+  font-family: 'Noto Sans KR', sans-serif;
+  background-color: #f9fafb;
+}
+
+/* ✅ Layout */
+.layout {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* ✅ Sidebar */
+.sidebar {
+  width: 260px;
+  padding: 24px 20px;
+  background: #ffffff;
+  box-sizing: border-box;
+}
+
+.sidebar-header {
+  font-size: 20px;
+  font-weight: bold;
+  color: #4f46e5;
+  margin-bottom: 24px;
+}
+
+.logo-text {
+  margin-left: 4px;
+}
+
+.sidebar-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #6b7280;
+  margin-bottom: 16px;
+}
+
+.sidebar-btn {
+  width: 100%;
+  padding: 14px 16px;
+  margin-bottom: 12px;
+  background: #f3f4f6;
+  color: #111827;
+  font-size: 15px;
+  font-weight: 500;
+  border: none;
+  border-radius: 12px;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.sidebar-btn.active {
+  background-color: #e0e7ff;
+  color: #3730a3;
+  box-shadow: 0 0 0 2px #c7d2fe inset;
+}
+
+.divider {
+  border: none;
+  border-top: 1px solid #e5e7eb;
+  margin: 20px 0;
+}
+
+.recent-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #6b7280;
+  margin-bottom: 12px;
+}
+
+.chat-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.chat-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #fff;
+  padding: 12px 16px;
+  margin-bottom: 12px;
+  border-radius: 16px;
+  box-shadow: 0 0 0 1px #e5e7eb;
+  transition: box-shadow 0.2s ease;
+  cursor: pointer;
+}
+
+.chat-item:hover {
+  box-shadow: 0 0 0 2px #c7d2fe;
+}
+
+.chat-icon-circle {
+  font-size: 18px;
+  color: #6b7280;
+}
+
+.chat-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.chat-badge {
+  font-size: 11px;
+  color: #7c3aed;
+  background-color: #f5f3ff;
+  border: 1px solid #ddd6fe;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  display: inline-block;
+  width: fit-content;
+}
+
+.chat-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: #111827;
+}
+
+/* ✅ Main */
+.main-content {
+  flex-grow: 1;
+  background-color: #ffffff;
+  padding: 0px 60px 40px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow-y: auto;
+}
+
+/* ✅ Main Header (본문 내 헤더) */
+.main-header {
+  width: 100%;
+  max-width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding : 18px 0;
+  background-color: #ffffff;
+}
+
+.model-selector {
+  padding: 6px 12px;
+  font-size: 14px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  background-color: #f9fafb;
+  cursor: pointer;
+}
+
+.profile-img {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid #ddd;
+}
+
+/* ✅ Card */
+.card {
+  width: 100%;
+  max-width: 1100px;
+  background-color: transparent; /* 기존 black → transparent */
+  border-radius: 0; /* 카드 테두리 곡률 제거 */
+  box-shadow: none;  /* 그림자 제거 */
+  padding: 0; /* 내부 여백 제거 */
+  display: flex;
+  justify-content: center; /* 가운데 정렬 */
+}

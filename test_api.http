@@ -1,0 +1,9 @@
+# test_api.http
+
+POST http://127.0.0.1:8000/api/chat/send/
+Content-Type: application/json
+
+{
+  "thread_id": 1,
+  "message": "안녕하세요, 이 제품에 대해 어떻게 생각하세요?"
+}

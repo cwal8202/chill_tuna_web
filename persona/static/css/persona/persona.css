@@ -1,0 +1,77 @@
+.persona-create-wrapper {
+  width: 100%;
+  max-width: 720px;
+  margin: 40px auto 60px;
+  padding: 40px;
+  background-color: #f9fafb;
+  border-radius: 20px;
+}
+
+.persona-title {
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 32px;
+  text-align: center;
+  color: #111827;
+}
+
+.form-section {
+  margin-bottom: 24px;
+}
+
+.form-section label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 12px;
+  color: #374151;
+}
+
+.hint {
+  font-size: 13px;
+  color: #6b7280;
+  margin-left: 4px;
+}
+
+.btn-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.option-btn {
+  padding: 10px 16px;
+  font-size: 14px;
+  background-color: #ffffff;
+  border: 1px solid #d1d5db;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.option-btn:hover {
+  background-color: #e0e7ff;
+}
+
+.option-btn.active {
+  background-color: #6366f1;
+  color: #ffffff;
+  border-color: #6366f1;
+}
+
+.submit-btn {
+  margin-top: 32px;
+  width: 100%;
+  padding: 14px;
+  background-color: #6366f1;
+  color: white;
+  font-size: 16px;
+  font-weight: 600;
+  border: none;
+  border-radius: 14px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.submit-btn:hover {
+  background-color: #4f46e5;
+}

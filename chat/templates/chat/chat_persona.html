@@ -1,0 +1,205 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_head %}
+  <link href="{% static 'css/chat/chat.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block title %}페르소나 채팅{% endblock %}
+
+{% block content %}
+<div class="chat-wrapper" data-persona='{{ persona_json|safe }}'>
+
+  <!-- 🔹 페르소나 정보 -->
+  <div class="persona-info">
+    <div class="persona-header"><strong>페르소나{{ persona.id }} - {{ persona.name }}</strong></div>
+    <div class="persona-tags">
+      <div>{{ persona.age_group }}, {{ persona.gender }}, {{ persona.family_structure }}</div>
+      <div>{{ persona.purchase_pattern|join:", " }}</div>
+      <div>{{ persona.customer_value }}</div>
+      <div>{{ persona.lifestyle|join:", " }}</div>
+    </div>
+  </div>
+
+  <!-- 🔹 채팅 메시지 목록 -->
+  <!-- 초기 안내 메시지 (접기/펼치기 가능) -->
+  <div class="chat-system-msg-wrapper">
+    <div class="chat-system-msg" id="system-msg">
+      어떤 비즈니스 시뮬레이션을 원하시나요?<br>
+      신제품, 기존제품에 대한 구매의향을 물어보세요.<br>
+      또는 어떤 프로모션을 했을 때 이 고객이 구매할 의향이 생길지 물어 볼 수 있습니다.
+    </div>
+    <button id="toggle-system-msg" class="toggle-btn">안내 접기</button>
+  </div>
+  {% for msg in chat_messages %}
+    <div class="chat-row {% if msg.sender == 'user' %}user{% else %}persona{% endif %}">
+      <div class="chat-bubble">{{ msg.message }}</div>
+    </div>
+  {% endfor %}
+
+  <!-- 🔹 입력창 -->
+  <form class="chat-input-container">
+    {% csrf_token %}
+    <div class="chat-input-box">
+      <input type="text" class="chat-input" placeholder="메시지를 입력하세요...">
+      <button type="button" class="chat-send-btn">📤</button>
+    </div>
+    <div class="chat-footer-note">
+      Chill Tuna 비즈니스 시뮬레이터는 실수를 할 수 있습니다.<br>
+      참고용으로 사용하세요.
+    </div>
+  </form>
+
+</div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    // 안내 접기 기능
+    const toggleBtn = document.getElementById("toggle-system-msg");
+    const systemMsg = document.getElementById("system-msg");
+    const chatWrapper = document.querySelector('.chat-wrapper');
+    const personaJsonString = chatWrapper.dataset.persona;
+    const persona = JSON.parse(personaJsonString);
+    console.log(persona, "@@@@@@@@@@@@@@@@@@@@@@@@@@");
+
+    toggleBtn.addEventListener("click", function () {
+      if (systemMsg.style.display === "none") {
+        systemMsg.style.display = "block";
+        toggleBtn.textContent = "안내 접기";
+      } else {
+        systemMsg.style.display = "none";
+        toggleBtn.textContent = "안내 보기";
+      }
+    });
+
+    const inputBox = document.querySelector(".chat-input");
+    const sendBtn = document.querySelector(".chat-send-btn");
+    let isSending = false;
+    let loadingInterval = null;
+
+    // 전송 버튼 클릭시
+    sendBtn.addEventListener("click", sendMessage);
+
+    // 입력 버튼 엔터 누를 때
+    inputBox.addEventListener("keydown", function (event) {
+      if (event.key === "Enter" && !event.shiftKey) {
+        event.preventDefault();
+        sendMessage();
+      }
+    });
+
+    // CSRF 토큰 읽기 함수
+    function getCookie(name) {
+      const value = `; ${document.cookie}`;
+      const parts = value.split(`; ${name}=`);
+      if (parts.length === 2) return parts.pop().split(';').shift();
+    }
+
+    // 채팅 스레드 id 
+    let currentThreadId = {{ thread_id|default:"null" }};
+
+    // 사용자 입력 값 전송 함수
+    async function sendMessage() {
+      if (isSending) return;
+      const message = inputBox.value.trim();
+      if (!message) return;
+
+      isSending = true;
+      sendBtn.disabled = true;
+      inputBox.disabled = true;
+      sendBtn.textContent = "⏹️";
+
+      // 사용자 메시지 추가
+      const userChat = document.createElement("div");
+      userChat.className = "chat-row user";
+      userChat.innerHTML = `<div class="chat-bubble">${message}</div>`;
+      document.querySelector(".chat-input-container").before(userChat);
+
+      // 페르소나 로딩 버블 추가
+      const loadingChat = document.createElement("div");
+      loadingChat.className = "chat-row persona loading";
+      loadingChat.innerHTML = `<div class="chat-bubble">⏳ 로딩 중</div>`;
+      document.querySelector(".chat-input-container").before(loadingChat);
+
+      // 로딩중 애니메이션 시작
+      let dotCount = 0;
+      loadingInterval = setInterval(() => {
+        dotCount = (dotCount + 1) % 4; // 0,1,2,3 반복
+        const dots = '.'.repeat(dotCount);
+        loadingChat.querySelector('.chat-bubble').textContent = `⏳ 로딩 중${dots}`;
+      }, 500);
+
+      try {
+        const modelSelector = document.querySelector(".model-selector");
+        let model = modelSelector ? modelSelector.value : "default-model";
+        const personaId = {{ persona.id }};
+
+        const response = await fetch("{% url 'chat:chat_view' persona.id thread_id %}", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": getCookie("csrftoken")
+          },
+          body: JSON.stringify({ message, model, persona_id: personaId, thread_id: currentThreadId })
+        });
+        // llm 답변 데이터
+        const data = await response.json();
+        console.log(data);
+        console.log("이거 뭔데?");
+
+        // 새채팅이면 base.html 목록에 추가
+        if (data.is_new_thread) {
+          // base.html 목록에 추가
+          const chatList = document.querySelector('.chat-list');
+          const newChatItem  = document.createElement('li');
+          const newUrl = `/chat/${personaId}/${data.thread_id}/`;
+          newChatItem.className = 'chat-item';
+          newChatItem.innerHTML = `
+                              <a href="${newUrl}" class="chat-link">
+                                <div class="chat-icon-circle">💬</div>
+                                <div class="chat-info">
+                                  <div class="chat-badge">${persona.persona_summary_tag}</div>
+                                  <div class="chat-name">${data.thread_id} 페르소나 ${personaId} - ${persona.name}</div>
+                                </div>
+                              </a>
+                                `;
+          // 제일 위에 추가
+          chatList.prepend(newChatItem); 
+          // 브라우저 주소창의 URL을 새로고침 없이 변경합니다.
+          const newUrlForHistory = `/chat/${personaId}/${data.thread_id}/`;
+          history.replaceState(null, '', newUrlForHistory);
+
+        }
+        
+        // 새로 생성된 thread_id 전달
+        if (data.thread_id) {
+            currentThreadId = data.thread_id;
+        }
+
+        // 로딩중 정지
+        clearInterval(loadingInterval);
+
+        // 로딩중 실제 응답으로 교체
+        const personaChat = document.createElement("div");
+        personaChat.className = "chat-row persona";
+        personaChat.innerHTML = `<div class="chat-bubble">${data.persona_msg}</div>`;
+        loadingChat.replaceWith(personaChat);
+
+        inputBox.value = "";
+      } catch (err) {
+        console.error("메시지 전송 중 에러:", err);
+        clearInterval(loadingInterval);
+        loadingChat.querySelector('.chat-bubble').textContent = `❗ 오류가 발생했습니다.`;
+      } finally {
+        isSending = false;
+        sendBtn.disabled = false;
+        inputBox.disabled = false;
+        sendBtn.textContent = "📤";
+        inputBox.focus();
+      }
+    }
+  });
+</script>
+
+
+{% endblock %}

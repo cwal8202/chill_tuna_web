@@ -1,0 +1,139 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_head %}
+  <link href="{% static 'css/persona/persona.css' %}" rel="stylesheet">
+  <style>
+    /* 활성화된 버튼 스타일 */
+    .option-btn.active {
+      background-color: #007bff;
+      color: white;
+      border-color: #007bff;
+    }
+  </style>
+{% endblock %}
+
+{% block title %}페르소나 조건 선택{% endblock %}
+
+{% block content %}
+<div class="persona-create-wrapper">
+  <h2 class="persona-title">페르소나 조건 선택</h2>
+  
+  <form method="GET" action="{% url 'persona:find_and_chat' %}" id="persona-form">
+
+    <div class="form-section">
+      <label>연령대</label>
+      <div class="btn-group" data-input-name="age_group">
+        {% for age in age_options %}<button type="button" class="option-btn">{{ age }}</button>{% endfor %}
+      </div>
+    </div>
+
+    <div class="form-section">
+      <label>성별</label>
+      <div class="btn-group" data-input-name="gender">
+        {% for gender in gender_options %}<button type="button" class="option-btn">{{ gender }}</button>{% endfor %}
+      </div>
+    </div>
+
+    <div class="form-section">
+      <label>직업</label>
+      <div class="btn-group" data-input-name="job">
+        {% for item in job_options %}<button type="button" class="option-btn">{{ item }}</button>{% endfor %}
+      </div>
+    <div>
+
+    <div class="form-section">
+      <label>가족 구성</label>
+      <div class="btn-group" data-input-name="family_structure">
+        {% for item in family_options %}<button type="button" class="option-btn">{{ item }}</button>{% endfor %}
+      </div>
+    </div>
+
+    <div class="form-section">
+      <label>고객 취향 <span class="hint">(최대 3개 선택 가능)</span></label>
+      <div class="btn-group multi-select" data-input-name="purchase_pattern" data-max="3">
+        {% for item in purchase_pattern_options %}<button type="button" class="option-btn">{{ item }}</button>{% endfor %}
+      </div>
+    </div>
+    
+    <div class="form-section">
+      <label>고객 가치(RFM)</label>
+      <div class="btn-group" data-input-name="customer_value">
+        {% for item in customer_value_options %}<button type="button" class="option-btn">{{ item }}</button>{% endfor %}
+      </div>
+    </div>
+
+    <div class="form-section">
+      <label>라이프스타일 <span class="hint">(다중 선택 가능)</span></label>
+      <div class="btn-group multi-select" data-input-name="lifestyle">
+        {% for item in lifestyle_options %}<button type="button" class="option-btn">{{ item }}</button>{% endfor %}
+      </div>
+    </div>
+
+    <div id="hidden-inputs"></div>
+
+    <button type="submit" class="submit-btn">설정</button>
+  </form>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const hiddenInputsContainer = document.getElementById('hidden-inputs');
+  const form = document.getElementById('persona-form');
+
+  document.querySelectorAll(".btn-group").forEach(group => {
+    const isMulti = group.classList.contains("multi-select");
+    const max = parseInt(group.dataset.max || "0", 10); // 0이면 제한 없음
+    
+    group.querySelectorAll(".option-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        if (isMulti) {
+          if (btn.classList.contains("active")) {
+            // 선택 해제
+            btn.classList.remove("active");
+          } else {
+            const selectedCount = group.querySelectorAll(".option-btn.active").length;
+            if (max > 0 && selectedCount >= max) return;
+            btn.classList.add("active");
+          }
+        } else {
+          group.querySelectorAll(".option-btn").forEach(b => b.classList.remove("active"));
+          btn.classList.add("active");
+        }
+        updateHiddenInputs(); // 버튼 클릭 시 숨겨진 input 업데이트
+      });
+    });
+  });
+
+  function updateHiddenInputs() {
+    hiddenInputsContainer.innerHTML = '';
+
+    document.querySelectorAll('.btn-group').forEach(group => {
+      const inputName = group.dataset.inputName;
+      if (!inputName) return;
+
+      group.querySelectorAll('.option-btn.active').forEach(activeBtn => {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = inputName;                     
+        input.value = activeBtn.textContent.trim(); 
+        hiddenInputsContainer.appendChild(input);
+      });
+    });
+  }
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault(); // 폼이 서버로 직접 제출되는 걸 막음
+    updateHiddenInputs(); 
+
+    const formData = new FormData(form);
+    const qs = new URLSearchParams(formData).toString();
+
+    try {
+      await fetch("{% url 'persona:build_persona' %}?" + qs, { method: "GET" });
+    } catch (err) {
+    }
+  });
+});
+</script>
+{% endblock %}
