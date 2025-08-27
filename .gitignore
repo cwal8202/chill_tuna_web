@@ -1,0 +1,5 @@
+"# chill_tuna_web" 
+.venv/
+.env
+*.pyc
+/__pycache__/
