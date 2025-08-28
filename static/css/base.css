@@ -26,17 +26,17 @@ body {
   margin-bottom: 24px;
 }
 
-.logo-text {
-  margin-left: 4px;
-}
-
 .sidebar-header .logo-link {
-  text-decoration: none; /* 밑줄 제거 */
-  color: inherit; /* 부모로부터 색상 상속 또는 특정 색상 설정 */     
+  text-decoration: none; /* Remove underline */
+  color: inherit; /* Inherit color from parent, or set a specific color */
 }
 
 .sidebar-header .logo-link:hover {
-  color: inherit; /* 호버 시 색상 변경 방지 */
+  color: inherit; /* Prevent color change on hover */
+}
+
+.logo-text {
+  margin-left: 4px;
 }
 
 .sidebar-title {
@@ -59,6 +59,12 @@ body {
   text-align: left;
   cursor: pointer;
   transition: background-color 0.2s;
+  text-decoration: none; /* Ensure no underline for links */
+  color: #111827; /* Explicitly set color for links */
+}
+
+.sidebar-btn:hover {
+  text-decoration: none; /* Ensure no underline on hover */
 }
 
 .sidebar-btn.active {
@@ -180,4 +186,163 @@ body {
   padding: 0; /* 내부 여백 제거 */
   display: flex;
   justify-content: center; /* 가운데 정렬 */
+}
+
+/* Modal (background) */
+.modal {
+  display: none; /* Hidden by default */
+  position: fixed; /* Stay in place */
+  z-index: 1; /* Sit on top */
+  left: 0;
+  top: 0;
+  width: 100%; /* Full width */
+  height: 100%; /* Full height */
+  overflow: auto; /* Enable scroll if needed */
+  background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+  justify-content: center; /* Center content horizontally */
+  align-items: center; /* Center content vertically */
+}
+
+/* Modal Content/Box */
+.modal-content {
+  background-color: #fefefe;
+  margin: auto; /* Center the modal */
+  padding: 20px;
+  border: 1px solid #888;
+  width: 80%; /* Could be more or less, depending on screen size */
+  max-width: 600px;
+  border-radius: 10px;
+  position: relative; /* For close button positioning */
+  box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19);
+  animation-name: animatetop;
+  animation-duration: 0.4s
+}
+
+/* The Close Button */
+.close-button {
+  color: #aaa;
+  float: right;
+  font-size: 28px;
+  font-weight: bold;
+  position: absolute;
+  right: 15px;
+  top: 10px;
+}
+
+.close-button:hover,
+.close-button:focus {
+  color: black;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+/* Modal Search Input Container */
+.modal-search-input-container {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.modal-search-input-container input {
+  flex-grow: 1;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 1em;
+}
+
+.modal-search-input-container button {
+  padding: 10px 15px;
+  background-color: #4f46e5;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 1em;
+}
+
+.modal-search-input-container button:hover {
+  background-color: #4338ca;
+}
+
+/* Animation */
+@-webkit-keyframes animatetop {
+  from {top:-300px; opacity:0} 
+  to {top:0; opacity:1}
+}
+
+@keyframes animatetop {
+  from {top:-300px; opacity:0}
+  to {top:0; opacity:1}
+}
+
+/* Search Results Display */
+#search-results-display {
+  max-height: 400px; /* Limit height for scroll */
+  overflow-y: auto;
+  border-top: 1px solid #eee;
+  padding-top: 10px;
+}
+
+.search-results-list-modal {
+    list-style: none;
+    padding: 0;
+}
+
+.search-result-item-modal {
+    background-color: #f9f9f9;
+    border: 1px solid #eee;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    overflow: hidden;
+}
+
+.search-result-link-modal {
+    display: block;
+    padding: 10px;
+    text-decoration: none;
+    color: #333;
+    transition: background-color 0.2s ease;
+}
+
+.search-result-link-modal:hover {
+    background-color: #f0f0f0;
+}
+
+.search-result-header-modal {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.8em;
+    color: #666;
+    margin-bottom: 5px;
+}
+
+.search-result-persona-modal {
+    font-weight: bold;
+    color: #4f46e5;
+}
+
+.search-result-message-modal {
+    font-size: 0.9em;
+    line-height: 1.4;
+}
+
+.search-result-sender-modal {
+    font-weight: bold;
+    color: #888;
+}
+
+.logout-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
+  color: #4f46e5; /* Or whatever color your links are */
+  text-decoration: none;
+  display: inline; /* To make it behave like a link */
+}
+
+.logout-btn:hover {
+  text-decoration: underline;
 }

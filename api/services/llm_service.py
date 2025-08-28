@@ -13,7 +13,7 @@ from dotenv import load_dotenv
 #               2. 사용자 입력과 persona 정보를 프롬프트로 구성
 #               3. LLM API에 전달하여 응답 받아오기
 #               4. 응답 텍스트 반환
-def get_llm_response(persona_id, user_input, model_name="gpt-4o-mini"):
+def get_llm_response(request, persona_id, user_input, model_name="gpt-4o-mini"):
     """
     사용자 입력과 페르소나 정보를 받아 LLM API에 전달하고 응답을 반환합니다.
     API 통신 실패 시 예외(Exception)를 발생시킬 수 있습니다.

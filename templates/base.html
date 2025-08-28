@@ -22,9 +22,9 @@
       </div>
 
       <div class="sidebar-title">My Chatbots</div>
-      <a href="{% url 'home' %}" class="sidebar-btn active">🌍 새 채팅</a>
-      <button class="sidebar-btn">🔍 채팅 검색</button>
-      <a href="{% url 'chat:all_chats' %}" class="sidebar-btn">📚 모든 채팅 보기</a>
+      <button class="sidebar-btn active" onclick="location.href='{% url 'home' %}'">🌍 새 채팅</button>
+      <button class="sidebar-btn" id="open-search-modal-btn">🔍 채팅 검색</button>
+      <button class="sidebar-btn" onclick="location.href='{% url 'chat:all_chats' %}'">📚 모든 채팅 보기</button>
 
       <hr class="divider">
 
@@ -62,7 +62,10 @@
           {% if user.is_authenticated %}
             <span>안녕하세요, {{ user.username }}님!</span>
             <img src="{% static 'persona/profile.png' %}" alt="프로필" class="profile-img">
-            <a href="{% url 'users:logout' %}">로그아웃</a>
+            <form action="{% url 'users:logout' %}" method="post" style="display: inline;">
+                {% csrf_token %}
+                <button type="submit" class="logout-btn">로그아웃</button>
+            </form>
           {% else %}
             <a href="{% url 'users:login' %}">로그인</a>
             <a href="{% url 'users:signup' %}">회원가입</a>
@@ -72,11 +75,126 @@
 
       <!-- 본문 카드 -->
       <div class="card">
-        {% block content %}
-        {% endblock %}
+        {% block content %}{% endblock %}
       </div>
 
     </main>
   </div>
+
+  <!-- Search Modal Structure -->
+  <div id="searchModal" class="modal">
+    <div class="modal-content">
+      <span class="close-button">&times;</span>
+      <h2>채팅 검색</h2>
+      <div class="modal-search-input-container">
+        <input type="text" id="modal-search-input" placeholder="검색어를 입력하세요...">
+        <button id="modal-search-btn">검색</button>
+      </div>
+      <div id="search-results-display">
+        <!-- Search results will be loaded here -->
+      </div>
+    </div>
+  </div>
+
 </body>
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    console.log("DOM Content Loaded.");
+    const openSearchModalBtn = document.getElementById("open-search-modal-btn");
+    const searchModal = document.getElementById("searchModal");
+    const closeButton = document.querySelector(".close-button");
+    const modalSearchInput = document.getElementById("modal-search-input");
+    const modalSearchBtn = document.getElementById("modal-search-btn");
+    const searchResultsDisplay = document.getElementById("search-results-display");
+
+    // Open modal
+    if (openSearchModalBtn) {
+      console.log("Search button found.");
+      openSearchModalBtn.addEventListener("click", function() {
+        console.log("Search button clicked.");
+        searchModal.style.display = "flex"; // Use flex to center content
+      });
+    }
+
+    // Close modal
+    if (closeButton) {
+      closeButton.addEventListener("click", function() {
+        searchModal.style.display = "none";
+        searchResultsDisplay.innerHTML = ''; // Clear previous results
+        modalSearchInput.value = ''; // Clear search input
+      });
+    }
+
+    // Close modal when clicking outside of it
+    window.addEventListener("click", function(event) {
+      if (event.target == searchModal) {
+        searchModal.style.display = "none";
+        searchResultsDisplay.innerHTML = ''; // Clear previous results
+        modalSearchInput.value = ''; // Clear search input
+      }
+    });
+
+    // Handle search within modal
+    if (modalSearchBtn) {
+      modalSearchBtn.addEventListener("click", performModalSearch);
+      modalSearchInput.addEventListener("keydown", function(event) {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          performModalSearch();
+        }
+      });
+    }
+
+    async function performModalSearch() {
+      const query = modalSearchInput.value.trim();
+      if (!query) {
+        searchResultsDisplay.innerHTML = '<p>검색어를 입력해주세요.</p>';
+        return;
+      }
+
+      searchResultsDisplay.innerHTML = '<p>검색 중...</p>';
+
+      try {
+        const response = await fetch(`{% url 'chat:chat_search' %}?q=${encodeURIComponent(query)}`);
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        
+        if (data.error) {
+            searchResultsDisplay.innerHTML = `<p style="color: red;">오류: ${data.error}</p>`;
+            return;
+        }
+
+        if (data.results && data.results.length > 0) {
+          let resultsHtml = '<ul class="search-results-list-modal">';
+          data.results.forEach(thread => {
+            resultsHtml += `<li class="search-result-item-modal">`;
+            resultsHtml += `<a href="/chat/${thread.persona_id}/${thread.thread_id}/" class="search-result-link-modal">`; // Dynamic URL
+            resultsHtml += `<div class="search-result-header-modal">`;
+            resultsHtml += `<span class="search-result-persona-modal">${thread.persona_name}</span>`;
+            resultsHtml += `<span class="search-result-date-modal">${thread.last_message_date}</span>`;
+            resultsHtml += `</div>`;
+            resultsHtml += `<div class="search-result-thread-title-modal">채팅 스레드 ID: ${thread.thread_id}</div>`;
+            resultsHtml += `<ul class="search-result-messages-modal">`;
+            thread.messages.forEach(msg => {
+              resultsHtml += `<li><span class="search-result-sender-modal">(${msg.sender})</span> ${msg.message}</li>`;
+            });
+            resultsHtml += `</ul>`;
+            resultsHtml += `</a>`;
+            resultsHtml += `</li>`;
+          });
+          resultsHtml += '</ul>';
+          searchResultsDisplay.innerHTML = resultsHtml;
+        } else {
+          searchResultsDisplay.innerHTML = '<p>검색 결과가 없습니다.</p>';
+        }
+
+      } catch (error) {
+        console.error("Search failed:", error);
+        searchResultsDisplay.innerHTML = `<p style="color: red;">검색 중 오류가 발생했습니다: ${error.message}</p>`;
+      }
+    }
+  });
+</script>
 </html>

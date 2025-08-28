@@ -36,8 +36,18 @@ def get_chat_start_data(request, persona_id, thread_id):
     # 3. 신규 채팅 (thread_id가 0 또는 None)일 경우 새 ChatThread 생성
     else:
         user = request.user if request.user.is_authenticated else None
-        chat_thread = ChatThread.objects.create(persona=persona, user=user)
-        return chat_thread, [], None # 새 스레드이므로 메시지는 비어있음
+        
+        # 이전에 페르소나로 채팅한 기록이 있으면 해당 채팅 스레드를 반환
+        existing_chat_thread = ChatThread.objects.filter(persona=persona, user=user).first()
+        
+        if existing_chat_thread:
+            chat_thread = existing_chat_thread
+            chat_messages = ChatMessage.objects.filter(thread=chat_thread).order_by("timestamp")
+            return chat_thread, chat_messages, None
+        else:
+            # 페르소나 기록도 없고 채팅쓰레드가 없으면 새 스레드 생성
+            chat_thread = ChatThread.objects.create(persona=persona, user=user)
+            return chat_thread, [], None # 새 스레드이므로 메시지는 비어있음
 
 
 # 함수명 : save_chat_conversation

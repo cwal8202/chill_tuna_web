@@ -8,6 +8,9 @@ import api.services.chat_service as chat_service
 import api.services.llm_service as llm_service
 from django.forms.models import model_to_dict
 from django.views import View
+from datetime import datetime # Added this line
+from django.db.models import Max # Import Max for ordering
+
 
 # Create your views here.
 
@@ -72,7 +75,7 @@ class ChatView(LoginRequiredMixin, View):
         thread_id = payload.get("thread_id")
 
         # 2) LLM 답변이 온 뒤에 db에 저장. chatthread db, chatmessage db
-        llm_output = llm_service.get_llm_response(persona_id, user_input, selected_model)
+        llm_output = llm_service.get_llm_response(request, persona_id, user_input, selected_model)
         chat_thread = None
         if llm_output:
             chat_thread = chat_service.save_chat_messsage(request, user_input, persona_id, thread_id, llm_output)
@@ -95,6 +98,8 @@ class ChatView(LoginRequiredMixin, View):
             # 저장 중 에러가 발생한 경우
             return JsonResponse({"error": "메시지 저장에 실패했습니다."}, status=500)
 
+
+
 class AllChatsView(LoginRequiredMixin, View):
     login_url = '/users/login/'
 
@@ -104,3 +109,50 @@ class AllChatsView(LoginRequiredMixin, View):
             'all_chats': all_chats
         }
         return render(request, 'chat/all_chats.html', context)
+
+
+class ChatSearchView(LoginRequiredMixin, View):
+    login_url = '/users/login/'
+
+    def get(self, request):
+        query = request.GET.get('q', '')
+        results_data = []
+
+        if query:
+            # Get all chat messages for the current user that match the query
+            matching_messages = ChatMessage.objects.filter(
+                thread__user=request.user,
+                message__icontains=query
+            ).order_by('timestamp') # Order by timestamp to get messages in chronological order within a thread
+
+            # Group messages by thread
+            threads_with_matches = {}
+            for msg in matching_messages:
+                thread_id = msg.thread.id
+                if thread_id not in threads_with_matches:
+                    threads_with_matches[thread_id] = {
+                        'thread_id': thread_id,
+                        'persona_id': msg.thread.persona.id,
+                        'persona_name': msg.thread.persona.name,
+                        'persona_summary_tag': msg.thread.persona.persona_summary_tag,
+                        'last_message_date': (msg.thread.messages.aggregate(Max('timestamp'))['timestamp__max'] or datetime.now()).strftime("%Y년 %m월 %d일 %H:%M"), # Get last message date of the thread
+                        'messages': []
+                    }
+                threads_with_matches[thread_id]['messages'].append({
+                    'sender': msg.sender,
+                    'message': msg.message,
+                    'timestamp': msg.timestamp.strftime("%Y년 %m월 %d일 %H:%M")
+                })
+            
+            # Convert dictionary to list and sort by last message date of the thread
+            # (This sorting is already done by the aggregate Max('timestamp') and then by the loop order)
+            # For consistent ordering, we might want to sort the threads_with_matches by last_message_date
+            # However, the current structure groups by thread_id, so let's just convert to list
+            # and ensure messages within each thread are chronological (which they are due to initial filter)
+            
+            # Sort threads by their last message date (descending)
+            sorted_threads = sorted(threads_with_matches.values(), key=lambda x: x['last_message_date'], reverse=True)
+
+            results_data = sorted_threads
+
+        return JsonResponse({'results': results_data})
