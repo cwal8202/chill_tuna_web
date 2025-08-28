@@ -30,6 +30,15 @@ body {
   margin-left: 4px;
 }
 
+.sidebar-header .logo-link {
+  text-decoration: none; /* 밑줄 제거 */
+  color: inherit; /* 부모로부터 색상 상속 또는 특정 색상 설정 */     
+}
+
+.sidebar-header .logo-link:hover {
+  color: inherit; /* 호버 시 색상 변경 방지 */
+}
+
 .sidebar-title {
   font-size: 14px;
   font-weight: 600;

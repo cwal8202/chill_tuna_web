@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% block title %}모든 채팅{% endblock %}
+
+{% block content %}
+<div class="all-chats-container">
+    <h1>모든 채팅</h1>
+    {% if all_chats %}
+        <ul class="chat-list-full">
+            {% for chat_thread in all_chats %}
+            <li class="chat-item-full">
+                <a href="{% url 'chat:chat_view' chat_thread.persona.id chat_thread.id %}" class="chat-link-full">
+                    <div class="chat-icon-full">💬</div>
+                    <div class="chat-info-full">
+                        <div class="chat-badge-full">{{ chat_thread.persona.persona_summary_tag }}</div>
+                        <div class="chat-name-full">{{ chat_thread.persona.name }}</div>
+                        <div class="chat-date-full">{{ chat_thread.created_at|date:"Y년 m월 d일 H:i" }}</div>
+                    </div>
+                </a>
+            </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>아직 저장된 채팅이 없습니다.</p>
+    {% endif %}
+</div>
+{% endblock %}

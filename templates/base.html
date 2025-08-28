@@ -16,40 +16,34 @@
     <!-- ✅ 사이드바 -->
     <aside class="sidebar">
       <div class="sidebar-header">
-        🌀 <span class="logo-text">Chill Tuna</span>
+        <a href="{% url 'home' %}" class="logo-link">
+          🌀 <span class="logo-text">Chill Tuna</span>
+        </a>
       </div>
 
       <div class="sidebar-title">My Chatbots</div>
-      <button class="sidebar-btn active">🌍 새 채팅</button>
+      <a href="{% url 'home' %}" class="sidebar-btn active">🌍 새 채팅</a>
       <button class="sidebar-btn">🔍 채팅 검색</button>
+      <a href="{% url 'chat:all_chats' %}" class="sidebar-btn">📚 모든 채팅 보기</a>
 
       <hr class="divider">
 
       <div class="recent-section">
         <div class="recent-title">Recent Chats</div>
         <ul class="chat-list">
+          {% for chat_thread in recent_chats %}
           <li class="chat-item">
-            <div class="chat-icon-circle">💬</div>
-            <div class="chat-info">
-              <div class="chat-badge">VIP + 웹방추구형</div>
-              <div class="chat-name">페르소나 1 - 박동현</div>
-            </div>
+            <a href="{% url 'chat:chat_view' chat_thread.persona.id chat_thread.id %}" class="chat-link">
+              <div class="chat-icon-circle">💬</div>
+              <div class="chat-info">
+                <div class="chat-badge">{{ chat_thread.persona.persona_summary_tag }}</div>
+                <div class="chat-name">{{ chat_thread.persona.name }}</div>
+              </div>
+            </a>
           </li>
-          <li class="chat-item">
-            <div class="chat-icon-circle">💬</div>
-            <div class="chat-info">
-              <div class="chat-badge">우수고객</div>
-              <div class="chat-badge">가족+채식취향</div>
-              <div class="chat-name">페르소나 2 - 박진성</div>
-            </div>
-          </li>
-          <li class="chat-item">
-            <div class="chat-icon-circle">💬</div>
-            <div class="chat-info">
-              <div class="chat-badge">경험치2등급</div>
-              <div class="chat-name">페르소나 3 - 주용곤</div>
-            </div>
-          </li>
+          {% empty %}
+          <li class="chat-item no-chats">최근 채팅이 없습니다.</li>
+          {% endfor %}
         </ul>
       </div>
     </aside>

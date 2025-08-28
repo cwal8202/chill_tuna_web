@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect
 from django.contrib import messages
+from django.contrib.auth.mixins import LoginRequiredMixin
 from .models import ChatThread, ChatMessage, Persona
 from django.http import HttpResponse, JsonResponse
 import json
@@ -20,7 +21,8 @@ from django.views import View
 # 4. llm에서 output으로 나온 값을 화면에 전달.
 # 5. 만약 화면 꺼지거나, session 종료되거나, 사용자가 끄면 chatthread에 저장
 
-class ChatView(View):
+class ChatView(LoginRequiredMixin, View):
+    login_url = '/users/login/'
     # 함수명 : get
     # input : request, persona_id, thread_id
     # output : chat_persona.html 화면 + context
@@ -31,9 +33,10 @@ class ChatView(View):
     #               2. 화면전달 : persona, chat_message, thread_id
     def get(self, request, persona_id, thread_id):
         print(persona_id, thread_id, "###########################")
-        # 1. 페르소나 id, thread_id로 페르소나, 채팅 내용 가져오기
-        persona, chat_messages, error_message = chat_service.get_chat_start_data(persona_id, thread_id)
-
+        # 1. 페르소나 id, thread_id로 chat_thread, 채팅 내용 가져오기
+        chat_thread, chat_messages, error_message = chat_service.get_chat_start_data(request, persona_id, thread_id)
+        persona = chat_thread.persona
+        thread_id = chat_thread.id
         if error_message:
             messages.error(request, error_message)
             print(f"{thread_id}번 채팅 스레드를 찾을 수 없습니다.") # 삭제해야함
@@ -70,10 +73,10 @@ class ChatView(View):
 
         # 2) LLM 답변이 온 뒤에 db에 저장. chatthread db, chatmessage db
         llm_output = llm_service.get_llm_response(persona_id, user_input, selected_model)
+        chat_thread = None
         if llm_output:
-            chat_service.save_chat_messsage(user_input, persona_id, thread_id, llm_output)
+            chat_thread = chat_service.save_chat_messsage(request, user_input, persona_id, thread_id, llm_output)
         ## 2-1) llm 답변으로 chat_thread, chat_message 저장
-        chat_thread = chat_service.save_chat_messsage(user_input, persona_id, thread_id, llm_output)
         # 3) 화면에 LLM 답변 전달.
 
         # 3) 화면에 LLM 답변과 새로 생성/업데이트된 thread_id를 전달
@@ -91,3 +94,13 @@ class ChatView(View):
         else:
             # 저장 중 에러가 발생한 경우
             return JsonResponse({"error": "메시지 저장에 실패했습니다."}, status=500)
+
+class AllChatsView(LoginRequiredMixin, View):
+    login_url = '/users/login/'
+
+    def get(self, request):
+        all_chats = ChatThread.objects.filter(user=request.user).order_by('-created_at')
+        context = {
+            'all_chats': all_chats
+        }
+        return render(request, 'chat/all_chats.html', context)

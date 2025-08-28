@@ -161,10 +161,12 @@ def find_and_chat_view(request):
     if scores and sum(scores.values()) > 0:
         best_persona_id = max(scores, key=scores.get)
         best_persona = Persona.objects.get(id=best_persona_id)
-        return redirect('persona:chat_persona', persona_id=best_persona.id)
+        # Redirect to chat app's chat view with persona_id and thread_id=0 for a new chat
+        return redirect('chat:chat_view', persona_id=best_persona.id, thread_id=0)
     else:
         if all_personas.exists():
-            return redirect('persona:chat_persona', persona_id=all_personas.first().id)
+            # Redirect to chat app's chat view with the first persona and thread_id=0
+            return redirect('chat:chat_view', persona_id=all_personas.first().id, thread_id=0)
         else:
             return redirect('persona:create_persona')
         

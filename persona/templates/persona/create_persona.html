@@ -121,19 +121,6 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     });
   }
-
-  form.addEventListener("submit", async (e) => {
-    e.preventDefault(); // 폼이 서버로 직접 제출되는 걸 막음
-    updateHiddenInputs(); 
-
-    const formData = new FormData(form);
-    const qs = new URLSearchParams(formData).toString();
-
-    try {
-      await fetch("{% url 'persona:build_persona' %}?" + qs, { method: "GET" });
-    } catch (err) {
-    }
-  });
 });
 </script>
 {% endblock %}
