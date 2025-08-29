@@ -1,0 +1,142 @@
+/* static/css/users/signup.css (정리된 최종본) */
+
+/* ==================================
+   1. 기본 및 레이아웃
+   ================================== */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+.signup-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 70vh;
+  padding: 40px 20px;
+}
+
+.signup-card {
+  background: #fff;
+  padding: 40px 32px;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.signup-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+/* ==================================
+   2. 폼 요소
+   ================================== */
+.signup-form p {
+  /* 여러 군데 있던 스타일을 하나로 통합 */
+  margin-bottom: 24px;
+  max-width: 400px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.signup-form label {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 6px;
+}
+
+.signup-form input {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.signup-form input:focus {
+  border-color: #6366f1;
+  box-shadow: 0 0 0 2px #c7d2fe;
+}
+
+.signup-btn {
+  display: block;
+  width: 100%;
+  max-width: 400px;
+  margin: 12px auto 0;
+  padding: 12px;
+  background-color: #6366f1;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.signup-btn:hover {
+  background-color: #4f46e5;
+}
+
+.login-prompt {
+  margin-top: 20px;
+  font-size: 14px;
+  color: #6b7280;
+  text-align: center;
+}
+
+.login-prompt a {
+  color: #6366f1;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.login-prompt a:hover {
+  text-decoration: underline;
+}
+
+/* ==================================
+   3. 유효성 검사 (오류 및 안내)
+   ================================== */
+
+/* 안내 문구(Help Text)는 최종 결정대로 보이지 않도록 처리 */
+.helptext ul {
+  display: none;
+}
+
+/* 오류 메시지 목록(ul)은 하나의 상자로 통합하는 스타일만 남김 */
+.errorlist {
+  list-style: none;
+  padding: 12px 16px;
+  margin: 8px 0;
+  background-color: #fee2e2;
+  border: 1px solid #fca5a5;
+  border-radius: 8px;
+}
+
+/* 개별 오류 메시지(li)는 상자 안의 텍스트 줄처럼 보이게 */
+.errorlist li {
+  color: #b91c1c;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.6;
+  padding: 0;
+  margin: 0;
+  background-color: transparent;
+}
+
+/* 각 오류 메시지 앞에 아이콘 추가 */
+.errorlist li::before {
+  content: '❗️';
+  margin-right: 8px;
+  font-size: 14px;
+}

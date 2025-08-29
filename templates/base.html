@@ -67,7 +67,6 @@
         <div class="user-auth">
           {% if user.is_authenticated %}
             <span>안녕하세요, {{ user.username }}님!</span>
-            <img src="{% static 'persona/profile.png' %}" alt="프로필" class="profile-img">
             <form action="{% url 'users:logout' %}" method="post" style="display: inline;">
                 {% csrf_token %}
                 <button type="submit" class="logout-btn">로그아웃</button>

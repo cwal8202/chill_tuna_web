@@ -4,27 +4,148 @@
 {% block extra_head %}
   <link href="{% static 'css/persona/persona.css' %}" rel="stylesheet">
   <style>
-    /* 활성화된 버튼 스타일 */
-    .option-btn.active {
-      background-color: #007bff;
-      color: white;
-      border-color: #007bff;
-    }
+  /* 활성화된 버튼 스타일 */
+  .option-btn.active {
+    background-color: #6366f1; /* Primary color */
+    color: white;
+    border-color: #6366f1;
+  }
 
-    .persona-modal.hidden {
-      display: none !important;
-      pointer-events: none !important;
-    }
+  /* --- 모달 스타일 시작 --- */
+  .persona-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: flex; /* display:block 에서 flex로 변경하여 중앙정렬 */
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
 
-    .persona-modal { position: fixed; inset: 0; z-index: 9999; }
-    .persona-modal__backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.45); }
-    .persona-modal__content {
-      position: relative; max-width: 520px; margin: 10vh auto; background: #111; color: #fff;
-      border-radius: 16px; padding: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+  .persona-modal__backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+  }
+
+  .persona-modal__content {
+    position: relative;
+    width: 100%;
+    max-width: 300px; /* 이미지와 비슷한 너비로 조절 */
+    background: #ffffff;
+    color: #1f2937; /* 다크 텍스트 */
+    border-radius: 20px;
+    padding: 32px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    text-align: center;
+    transform: translateY(-20px);
+    opacity: 0;
+    animation: modal-fade-in 0.3s forwards;
+  }
+
+  @keyframes modal-fade-in {
+    to {
+      transform: translateY(0);
+      opacity: 1;
     }
-    .persona-modal__actions { display:flex; gap:12px; justify-content:flex-end; margin-top: 16px; }
-    .persona-modal__content h3 { margin: 0 0 8px 0; font-size: 1.25rem; }
-    .persona-modal__content p { margin: 8px 0; line-height: 1.5; }
+  }
+
+  /* --- 원형 프로그레스 바 --- */
+  .progress-circle {
+    position: relative;
+    width: 140px;
+    height: 140px;
+    border-radius: 50%;
+    margin: 0 auto 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: conic-gradient(
+      #6366f1 calc(var(--progress-percent) * 1%), 
+      #e5e7eb calc(var(--progress-percent) * 1%)
+    );
+  }
+
+  .progress-circle::before {
+    content: '';
+    position: absolute;
+    width: 110px;
+    height: 110px;
+    background: #fff;
+    border-radius: 50%;
+  }
+
+  .progress-circle__percent {
+    position: relative;
+    font-size: 32px;
+    font-weight: 700;
+    color: #6366f1;
+  }
+
+  .progress-circle__label {
+    position: relative;
+    font-size: 14px;
+    color: #6b7280;
+    margin-top: -4px;
+  }
+
+
+  /* --- 페르소나 정보 --- */
+  .persona-info h3 {
+    margin: 0 0 8px 0;
+    font-size: 22px;
+    font-weight: 700;
+  }
+
+  .persona-info p {
+    margin: 0;
+    color: #4b5563;
+    line-height: 1.6;
+  }
+
+
+  /* --- 모달 버튼 --- */
+  .persona-modal__actions {
+    display: flex; /* grid에서 flex로 변경 */
+    justify-content: center; /* 중앙 정렬 추가 */
+    gap: 12px;
+    margin-top: 32px;
+  }
+
+  .btn-primary, .btn-secondary {
+    padding: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    border-radius: 12px;
+    text-decoration: none;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: all 0.2s;
+    text-align: center;
+    flex: 1;
+    display: inline-flex;     /* 모든 버튼의 동작 방식을 flex로 통일 */
+    justify-content: center; /* 텍스트 가로 중앙 정렬 */
+    align-items: center;     /* 텍스트 세로 중앙 정렬 */
+  }
+
+  .btn-primary {
+    background-color: #6366f1;
+    color: #fff;
+    border-color: #6366f1;
+  }
+  .btn-primary:hover {
+    background-color: #4f46e5;
+  }
+
+  .btn-secondary {
+    background-color: #f3f4f6;
+    color: #4b5563;
+    border-color: #e5e7eb;
+  }
+  .btn-secondary:hover {
+    background-color: #e5e7eb;
+  }
   </style>
 {% endblock %}
 
@@ -88,11 +209,20 @@
 <div id="persona-modal" class="persona-modal" style="display:none;">
   <div class="persona-modal__backdrop"></div>
   <div class="persona-modal__content">
-    <h3 id="persona-modal-title">선택 결과</h3>
-    <p id="persona-modal-body">잠시만요…</p>
+    
+    <div class="progress-circle" style="--progress-percent: 0;">
+      <div class="progress-circle__percent">0%</div>
+      <div class="progress-circle__label">일치율</div>
+    </div>
+
+    <div class="persona-info">
+      <h3 id="persona-name"></h3>
+      <p id="persona-details"></p>
+    </div>
+
     <div class="persona-modal__actions">
-      <button id="persona-modal-close" type="button" class="option-btn">재설정</button>
-      <a id="persona-modal-link" href="#" class="submit-btn">채팅 시작</a>
+      <button id="persona-modal-close" type="button" class="btn-secondary">재설정</button>
+      <a id="persona-modal-link" href="#" class="btn-primary">채팅 시작</a>
     </div>
   </div>
 </div>
@@ -103,30 +233,50 @@
   const submitBtn = form.querySelector('.submit-btn');
   const hiddenInputsContainer = document.getElementById('hidden-inputs');
 
-  // 모달 refs
+  // --- 모달 refs ---
   const modal = document.getElementById('persona-modal');
-  const modalTitle = document.getElementById('persona-modal-title');
-  const modalBody  = document.getElementById('persona-modal-body');
-  const modalLink  = document.getElementById('persona-modal-link');
   const modalClose = document.getElementById('persona-modal-close');
+  const modalLink  = document.getElementById('persona-modal-link');
+  const progressCircle = modal.querySelector('.progress-circle');
+  const progressPercent = modal.querySelector('.progress-circle__percent');
+  const personaName = document.getElementById('persona-name');
+  const personaDetails = document.getElementById('persona-details');
 
-  const openModal = ({title, body, linkHref, linkText="채팅 시작", personaData}) => {
-    modalTitle.textContent = title || '선택 결과';
-    modalBody.innerHTML = body || '';
-    if (linkHref) {
-      modalLink.style.display = 'inline-flex';
-      modalLink.href = linkHref;
-      modalLink.textContent = linkText;
-    } else {
+  // (openModal, closeModal, syncHiddenInputs, 버튼 토글 로직은 이전과 동일)
+  const openModal = (data) => {
+    if (!data || data.error) {
+      progressCircle.style.display = 'none';
+      personaName.textContent = data?.title || '오류';
+      personaDetails.innerHTML = data?.body || '문제가 발생했습니다.';
       modalLink.style.display = 'none';
+      modalClose.textContent = '닫기';
+      modal.style.display = 'flex';
+      return;
     }
-    modal.style.display = 'block';
+    progressCircle.style.display = 'flex';
+    const pct = data.match_percentage || 0;
+    progressCircle.style.setProperty('--progress-percent', pct);
+    progressPercent.textContent = `${pct}%`;
+    personaName.textContent = `페르소나 ${data.persona_id} - ${data.persona_data.name}`;
+    personaDetails.innerHTML = [
+      `${data.persona_data.age}, ${data.persona_data.gender}, ${data.persona_data.household}`,
+      data.persona_data.job,
+      data.persona_data.segment
+    ].filter(Boolean).join('<br>');
+
+    if (data.redirect_url) {
+        modalLink.style.display = 'inline-flex';
+        modalLink.href = data.redirect_url;
+        modalLink.textContent = '채팅 시작';
+    } else {
+        modalLink.style.display = 'none';
+    }
+    modalClose.textContent = '재설정';
+    modal.style.display = 'flex';
   };
   const closeModal = () => { modal.style.display = 'none'; };
   modalClose.addEventListener('click', closeModal);
   modal.querySelector('.persona-modal__backdrop').addEventListener('click', closeModal);
-
-  // 버튼 클릭 시 active 토글
   document.querySelectorAll('.btn-group').forEach(group => {
     group.querySelectorAll('.option-btn').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -135,7 +285,6 @@
       });
     });
   });
-
   const syncHiddenInputs = () => {
     hiddenInputsContainer.innerHTML = '';
     document.querySelectorAll('.btn-group').forEach(group => {
@@ -152,88 +301,90 @@
     });
   };
 
-  // 폼 비동기 전송
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
+  // 1. 선택되지 않은 항목을 찾아주는 함수 (새로 추가)
+  const getUnselectedCategories = () => {
+    const unselected = [];
+    document.querySelectorAll('.form-section').forEach(section => {
+      const group = section.querySelector('.btn-group');
+      const label = section.querySelector('label');
+      if (group && label && !group.querySelector('.option-btn.active')) {
+        unselected.push(label.textContent.trim());
+      }
+    });
+    return unselected;
+  };
 
-    // 전송 직전 hidden inputs 동기화
+  // 2. 실제 폼 전송 로직을 별도 함수로 분리 (새로 추가)
+  const proceedWithSubmission = async () => {
     syncHiddenInputs();
-
-    // 쿼리스트링 구성 (method="GET")
     const params = new URLSearchParams(new FormData(form));
-    const url = form.getAttribute('action') + (form.method.toUpperCase()==='GET'
-                 ? `?${params.toString()}`
-                 : '');
+    const url = `${form.getAttribute('action')}?${params.toString()}`;
 
-    // UX: 로딩상태
     const prevText = submitBtn.textContent;
     submitBtn.disabled = true;
     submitBtn.textContent = '선택 중...';
 
     try {
       const resp = await fetch(url, {
-        method: form.method || 'GET',
-        headers: {
-          // 서버가 JSON으로 응답할 수 있다면 우선 시도 (없어도 문제 없음)
-          'Accept': 'application/json, text/html;q=0.9'
-        },
-        credentials: 'same-origin',
-        redirect: 'follow' // 리다이렉트 따라감
+        method: 'GET',
+        headers: { 'Accept': 'application/json, text/html;q=0.9' },
       });
 
-      // 1) 서버가 리다이렉트했을 경우 (chat_view로)
       if (resp.redirected) {
-        const finalURL = resp.url; // chat_view 최종 URL
-        openModal({
-          title: '가장 알맞은 페르소나를 찾았어요!',
-          body: '선택한 조건을 바탕으로 채팅을 시작할 준비가 되었어요.',
-          linkHref: finalURL,
-          linkText: '채팅 시작하기'
-        });
-        return;
-      }
-
-      // 2) 서버가 JSON 응답을 주는 경우도 대응
-      const contentType = resp.headers.get('Content-Type') || '';
-      if (contentType.includes('application/json')) {
+        openModal({ match_percentage: 100, persona_id: 'N/A', persona_data: { name: '추천 페르소나'}, redirect_url: resp.url });
+      } else if (resp.headers.get('Content-Type')?.includes('application/json')) {
         const data = await resp.json();
-        // 기대 필드 예시: { persona_id, match_percentage, redirect_url }
-        const link = data.redirect_url ||
-                     (data.persona_id ? `{% url 'chat:chat_view' 0 0 %}`.replace('/0/0', `/${data.persona_id}/0`) : null);
-        const pct  = (typeof data.match_percentage === 'number') ? `${data.match_percentage}%` : null;
-        const msg  = [
-          '페르소나' + data.persona_id + ' - ' + data.persona_data.name,
-          data.persona_data.gender + ', ' + data.persona_data.age + ', ' + data.persona_data.household,
-          data.persona_data.job,
-          data.persona_data.segment
-        ].filter(Boolean).join('<br>');
-
-        openModal({
-          title: pct ? `일치율${pct}` : null,
-          body: msg,
-          linkHref: link,
-          linkText: '채팅 시작'
-        });
-        return;
+        openModal(data);
+      } else {
+        openModal({ error: true, title: '결과 확인 불가', body: '페이지를 새로고침 후 다시 시도해 주세요.'});
       }
-
-      // 3) HTML(리다이렉트 없음)로 온 경우 → 안내만
-      openModal({
-        title: '선택 결과',
-        body: '선택 결과를 확인할 수 없어요. 페이지를 새로고침하거나 다시 시도해 주세요.',
-        linkHref: null
-      });
-
     } catch (err) {
       console.error(err);
-      openModal({
-        title: '오류',
-        body: '요청 처리 중 문제가 발생했어요. 잠시 후 다시 시도해 주세요.',
-        linkHref: null
-      });
+      openModal({ error: true, title: '요청 오류', body: '처리 중 문제가 발생했습니다.' });
     } finally {
       submitBtn.disabled = false;
       submitBtn.textContent = prevText;
+    }
+  };
+
+
+  // 3. '설정' 버튼 클릭 시의 로직을 수정
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault(); // 폼의 기본 동작(페이지 이동)을 항상 막습니다.
+    
+    const unselectedItems = getUnselectedCategories();
+
+    // 모든 항목이 선택되었을 경우
+    if (unselectedItems.length === 0) {
+      proceedWithSubmission(); // 바로 전송 로직 실행
+    } 
+    // 선택되지 않은 항목이 있을 경우
+    else {
+      // 확인 모달을 띄웁니다.
+      progressCircle.style.display = 'none';
+      personaName.textContent = '선택하지 않은 항목이 있습니다';
+      // 선택되지 않은 항목 목록을 예쁘게 만듭니다.
+      const itemsList = unselectedItems.map(item => `<li>${item}</li>`).join('');
+      personaDetails.innerHTML = `
+        <ul style="list-style:none; padding:0; margin-top:12px; text-align:left;">${itemsList}</ul>
+        <p style="margin-top:16px;">선택하지 않은 항목은 랜덤으로 지정됩니다.<br>이대로 계속 진행할까요?</p>
+      `;
+      
+      modalLink.style.display = 'inline-flex';
+      modalLink.textContent = '네, 계속 진행'; // 버튼 텍스트 변경
+      modalLink.href = '#'; // 링크 기능은 잠시 무효화
+      
+      modalClose.textContent = '돌아가서 선택';
+      
+      modal.style.display = 'flex';
+
+      // '네, 계속 진행' 버튼을 눌렀을 때만 폼 전송
+      modalLink.onclick = (event) => {
+        event.preventDefault();
+        closeModal();
+        proceedWithSubmission();
+        modalLink.onclick = null; // 이벤트 핸들러 정리
+      };
     }
   });
 })();

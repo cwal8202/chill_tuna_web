@@ -1,10 +1,23 @@
 {% extends 'base.html' %}
+{% load static %}
+
+{% block extra_head %}
+  {# 새로 만든 signup.css 파일을 연결합니다. #}
+  <link href="{% static 'css/users/signup.css' %}" rel="stylesheet">
+{% endblock %}
 
 {% block content %}
-  <h2>회원가입</h2>
-  <form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">회원가입</button>
-  </form>
+<div class="signup-container">
+  <div class="signup-card">
+    <h2 class="signup-title">회원가입</h2>
+    <form method="post" class="signup-form">
+      {% csrf_token %}
+      {{ form.as_p }}
+      <button type="submit" class="signup-btn">회원가입</button>
+    </form>
+    <p class="login-prompt">
+      이미 계정이 있으신가요? <a href="{% url 'users:login' %}">로그인</a>
+    </p>
+  </div>
+</div>
 {% endblock %}
