@@ -97,10 +97,11 @@
 .chat-send-btn {
   background-color: #6366f1;
   color: white;
-  padding: 0 16px;
+  padding: 0 20px;
   border: none;
   border-radius: 12px;
-  font-size: 18px;
+  font-size: 14px;
+  font-weight: 600;
   cursor: pointer;
   transition: background-color 0.2s ease;
 }

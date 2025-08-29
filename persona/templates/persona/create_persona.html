@@ -84,15 +84,15 @@
   </form>
 </div>
 
-<!-- ✅ 모달 마크업 -->
+<!-- 모달 마크업 -->
 <div id="persona-modal" class="persona-modal" style="display:none;">
   <div class="persona-modal__backdrop"></div>
   <div class="persona-modal__content">
-    <h3 id="persona-modal-title">추천 결과</h3>
+    <h3 id="persona-modal-title">선택 결과</h3>
     <p id="persona-modal-body">잠시만요…</p>
     <div class="persona-modal__actions">
-      <a id="persona-modal-link" href="#" class="submit-btn">채팅으로 이동</a>
-      <button id="persona-modal-close" type="button" class="option-btn">닫기</button>
+      <button id="persona-modal-close" type="button" class="option-btn">재설정</button>
+      <a id="persona-modal-link" href="#" class="submit-btn">채팅 시작</a>
     </div>
   </div>
 </div>
@@ -110,8 +110,8 @@
   const modalLink  = document.getElementById('persona-modal-link');
   const modalClose = document.getElementById('persona-modal-close');
 
-  const openModal = ({title, body, linkHref, linkText="채팅으로 이동"}) => {
-    modalTitle.textContent = title || '추천 결과';
+  const openModal = ({title, body, linkHref, linkText="채팅 시작", personaData}) => {
+    modalTitle.textContent = title || '선택 결과';
     modalBody.innerHTML = body || '';
     if (linkHref) {
       modalLink.style.display = 'inline-flex';
@@ -168,7 +168,7 @@
     // UX: 로딩상태
     const prevText = submitBtn.textContent;
     submitBtn.disabled = true;
-    submitBtn.textContent = '추천 중...';
+    submitBtn.textContent = '선택 중...';
 
     try {
       const resp = await fetch(url, {
@@ -202,23 +202,25 @@
                      (data.persona_id ? `{% url 'chat:chat_view' 0 0 %}`.replace('/0/0', `/${data.persona_id}/0`) : null);
         const pct  = (typeof data.match_percentage === 'number') ? `${data.match_percentage}%` : null;
         const msg  = [
-          '추천 결과를 준비했어요.',
-          pct ? `일치율: <strong>${pct}</strong>` : null
+          '페르소나' + data.persona_id + ' - ' + data.persona_data.name,
+          data.persona_data.gender + ', ' + data.persona_data.age + ', ' + data.persona_data.household,
+          data.persona_data.job,
+          data.persona_data.segment
         ].filter(Boolean).join('<br>');
 
         openModal({
-          title: '추천 완료',
-          body: msg || '추천 결과를 확인해 주세요.',
+          title: pct ? `일치율${pct}` : null,
+          body: msg,
           linkHref: link,
-          linkText: '채팅으로 이동'
+          linkText: '채팅 시작'
         });
         return;
       }
 
       // 3) HTML(리다이렉트 없음)로 온 경우 → 안내만
       openModal({
-        title: '추천 결과',
-        body: '추천 결과를 확인할 수 없어요. 페이지를 새로고침하거나 다시 시도해 주세요.',
+        title: '선택 결과',
+        body: '선택 결과를 확인할 수 없어요. 페이지를 새로고침하거나 다시 시도해 주세요.',
         linkHref: null
       });
 

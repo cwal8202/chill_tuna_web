@@ -3,6 +3,7 @@ from django.http import JsonResponse
 from .models import Persona
 import json
 import random
+from django.contrib.auth.decorators import login_required      
 
 
 # 함수명      : create_persona
@@ -13,7 +14,7 @@ import random
 # 함수설명    : 
 #               1. GET 요청 시, 페르소나 조건 선택 페이지를 렌더링
 #               2. 해당 페이지의 버튼/폼에 필요한 선택 옵션 목록을 context를 통해 전달
-
+# @login_required
 def create_persona(request):
     context = {
         "age_options": ["랜덤", "20대", "30대", "40대", "50대", "60대 이상"],
@@ -186,7 +187,16 @@ def find_and_chat_view(request):
         return JsonResponse({
             "persona_id": best_persona.id,
             "match_percentage": match_percentage,
-            "redirect_url": f"/chat/{best_persona.id}/0/"
+            "redirect_url": f"/chat/{best_persona.id}/0/",
+            "persona_data": {
+                "name": best_persona.name,
+                "gender": best_persona.gender,
+                "age": best_persona.age,
+                "household": best_persona.household,
+                "job": best_persona.job,
+                "segment": best_persona.segment,
+                "persona_summary_tag": best_persona.persona_summary_tag 
+            }
         })
 
     return redirect('chat:chat_view', persona_id=best_persona.id, thread_id=0)

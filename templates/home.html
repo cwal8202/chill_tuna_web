@@ -1,16 +1,272 @@
 {% extends 'base.html' %}
+{% load static %}
+
+{% block extra_head %}
+  {# 홈 기본 스타일 #}
+  <link href="{% static 'css/home/home.css' %}" rel="stylesheet">
+  {# 실제 채팅과 동일한 룩&필을 위해 chat.css도 함께 로드 #}
+  <link href="{% static 'css/chat/chat.css' %}" rel="stylesheet">
+
+  <style>
+    /* ===== 실제 색/버블 스타일은 chat.css를 그대로 사용 ===== */
+
+    /* 데모 래핑 카드 크기(전체 카드 폭) */
+    .home-demo-wrap {
+      width: 100%;
+      max-width: 1100px;
+      margin: 28px auto 0;
+      box-sizing: border-box;
+    }
+
+    .home-demo-card {
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 16px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+      overflow: hidden;
+    }
+
+    .home-demo-header {
+      display: flex; align-items: center; gap: 10px;
+      padding: 12px 16px; background: #fafafa; border-bottom: 1px solid #f3f4f6;
+      font-weight: 700; color: #111827;
+    }
+
+    /* 스크롤 영역은 중앙 정렬 컨테이너 역할만 */
+    .home-demo-scroll {
+      height: 700px;
+      padding: 20px;
+      background: #fff;
+      overflow-y: auto;
+      overflow-x: hidden;                 /* 좌우 스크롤 방지 */
+      scroll-behavior: smooth;
+
+      display: flex;                      /* 중앙에 고정 */
+      justify-content: center;
+    }
+
+    /* ✅ 메시지 컬럼(실제 채팅과 동일한 기준 폭) */
+    .home-demo-scroll .chat-wrapper {
+      width: 100%;
+      max-width: 720px;                   /* chat.css와 동일 */
+      margin: 0;                          /* 카드 안에서는 바깥 여백 제거 */
+      background-color: #f9fafb;          /* chat.css 유지 */
+      padding: 40px;
+      border-radius: 20px;
+      display: flex; flex-direction: column; gap: 20px;
+
+      box-sizing: border-box;
+      overflow-x: hidden;                 /* 내부 요소가 밀어내는 것 방지 */
+    }
+
+    /* ✅ 어떤 내용도 가로를 밀지 못하게: 강제 줄바꿈 규칙 추가 */
+    .chat-row { width: 100%; max-width: 100%; min-width: 0; }
+    .chat-bubble {
+      max-width: 70%;                     /* chat.css와 동일 */
+      min-width: 0;
+      white-space: pre-wrap;
+      word-break: break-word;
+      overflow-wrap: anywhere;            /* 긴 토큰/URL도 강제 줄바꿈 */
+      box-sizing: border-box;
+    }
+
+    /* 상단 카드/안내도 안전하게 줄바꿈 */
+    .persona-info, .persona-tags, .chat-system-msg {
+      white-space: normal;
+      word-break: break-word;
+      overflow-wrap: anywhere;
+    }
+
+    /* 링크/코드/미디어가 폭을 밀지 않도록 */
+    .chat-bubble a { word-break: break-all; }
+    .chat-bubble img,
+    .chat-bubble video,
+    .chat-bubble pre,
+    .chat-bubble code {
+      max-width: 100%;
+      display: block;
+    }
+
+    /* 접근성: 모션 최소화 */
+    @media (prefers-reduced-motion: reduce) {
+      .home-demo-scroll { scroll-behavior: auto; }
+    }
+    .chat-bubble {
+      text-align: left;
+    }
+    .home-demo-card,
+    .home-demo-card * {
+      text-align: left;
+    }
+
+    .home-demo-card .chat-bubble,
+    .home-demo-card .persona-info,
+    .home-demo-card .persona-header,
+    .home-demo-card .persona-tags,
+    .home-demo-card .chat-system-msg,
+    .home-demo-card .chat-system-msg-wrapper {
+      text-align: left;
+    }
+
+    .home-description {
+      max-width: 700px;
+      margin: 20px auto;
+    }
+  </style>
+{% endblock %}
 
 {% block title %}Home - Chill Tuna{% endblock %}
 
 {% block content %}
-  <div style="text-align: center; padding: 50px;">
-    <h1>Chill Tuna에 오신 것을 환영합니다!</h1>
+  <div class="home-container">
+    <h1 class="home-slogan">당신만을 위한 AI 페르소나와 대화하세요.</h1>
+    <p class="home-description">Chill Tuna는 다양한 페르소나와 깊이 있는 대화를 나눌 수 있는 AI 챗봇 서비스입니다.</p>
+
     {% if user.is_authenticated %}
-    <p>안녕하세요, {{ user.username }}님!</p>
-    <p><a href="{% url 'users:logout' %}">로그아웃</a></p>
+      <a href="{% url 'persona:create_persona' %}" class="cta-button">새 채팅 시작하기</a>
+      <p class="welcome-message">안녕하세요, {{ user.username }}님!</p>
     {% else %}
-    <p>로그인하여 서비스를 이용해 보세요.</p>
-    <p><a href="{% url 'users:login' %}">로그인</a> 또는 <a href="{% url 'users:signup' %}">회원가입</a></p>
+      <a href="{% url 'users:login' %}" class="cta-button">로그인하여 시작하기</a>
+      <p class="auth-prompt">아직 계정이 없으신가요? <a href="{% url 'users:signup' %}">회원가입</a></p>
     {% endif %}
+
+    <!-- 🔥 실제 chat.css 룩&필을 그대로 쓰는 홈 데모 -->
+    <div class="home-demo-wrap">
+      <div class="home-demo-card">
+        <div class="home-demo-header">Chill Tuna 데모</div>
+
+        <!-- 실제 채팅과 같은 래퍼/행/버블 클래스 구조 -->
+        <div id="demoScroll" class="home-demo-scroll">
+          <div class="chat-wrapper" aria-live="polite" aria-atomic="false">
+            <!-- (JS가 아래에 메시지를 주입) -->
+            <div class="persona-info" style="margin-bottom:12px;">
+              <div class="persona-header"><strong>페르소나1123 - 송동훈</strong></div>
+              <div class="persona-tags">
+                <div>트렌드 주도형 소비자</div>
+                <div>50대, 남자, 기능 및 관련 기능 종사자</div>
+                <div>광주광역시, 1인 가구, 월소득 200~300만원 미만</div>
+              </div>
+            </div>
+
+            <div class="chat-system-msg-wrapper" style="margin-bottom:12px;">
+              <div class="chat-system-msg">
+                어떤 비즈니스 시뮬레이션을 원하시나요?<br>
+                신제품, 기존제품에 대한 구매의향을 물어보세요.<br>
+                또는 어떤 프로모션을 했을 때 이 고객이 구매할 의향이 생길지 물어 볼 수 있습니다.
+              </div>
+              <button class="toggle-btn" type="button" disabled>안내 접기</button>
+            </div>
+
+            <!-- ✅ 실제 채팅과 동일한 입력창 구조 (비활성화) -->
+            <form class="chat-input-container">
+              <div class="chat-input-box">
+                <input type="text" class="chat-input" placeholder="메시지를 입력하세요..." disabled>
+                <button type="button" class="chat-send-btn" disabled>전송</button>
+              </div>
+              <div class="chat-footer-note">
+                Chill Tuna 비즈니스 시뮬레이터는 실수를 할 수 있습니다.<br>
+                참고용으로 사용하세요.
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
+
+  {# JS: 자동 타이핑 데모 — 실제 chat.html 클래스 재사용 #}
+  <script>
+    // 데모 시나리오 (원하는 문장으로 바꿔도 됨)
+    const DEMO_DIALOG = [
+      { role: 'user',    text: '너는 어떤 소비자야?' },
+      { role: 'persona', text: '저는 광주에 사는 50대 남자 1인 가구의 송동훈이고, 편의를 특히 중시하고 가격에도 민감한 편이에요.'},
+      { role: 'user',    text: '그럼 당신은 어떤 식품을 선호하나요?' },
+      { role: 'persona', text: '저는 건강하고 간편한 HMR(즉석식품)과 프리미엄 제품을 선호해요. 새로운 맛과 경험을 중시하고, 요리를 자주 하지 않기 때문에 간편하게 먹을 수 있는 제품을 찾고 있습니다.' },
+    ];
+
+    const scrollArea = document.getElementById('demoScroll');
+    const wrapper    = scrollArea.querySelector('.chat-wrapper');
+
+    // 유틸
+    function el(tag, cls) { const n = document.createElement(tag); if (cls) n.className = cls; return n; }
+    function scrollToBottom() { scrollArea.scrollTop = scrollArea.scrollHeight; }
+
+    function appendRow(role, text) {
+      const row = el('div', `chat-row ${role === 'user' ? 'user' : 'persona'}`);
+      const bubble = el('div', 'chat-bubble');
+      bubble.textContent = text || '';
+      row.appendChild(bubble);
+      // 입력창(form) 앞에만 메시지를 삽입해서 입력창이 항상 맨 아래에 유지되도록
+      const inputForm = wrapper.querySelector('.chat-input-container');
+      wrapper.insertBefore(row, inputForm);
+      scrollToBottom();
+      return bubble;
+    }
+
+    // 실제 채팅에서 쓰는 로딩 버블 스타일을 흉내 (chat.css의 .chat-row.persona.loading과 시각 톤을 일치)
+    function appendLoadingRow() {
+      const row = el('div', 'chat-row persona loading');
+      const bubble = el('div', 'chat-bubble');
+      bubble.textContent = '⏳ 로딩 중';
+      row.appendChild(bubble);
+      const inputForm = wrapper.querySelector('.chat-input-container');
+      wrapper.insertBefore(row, inputForm);
+      scrollToBottom();
+
+      // 점점점 애니메이션
+      let dot = 0;
+      const id = setInterval(() => {
+        dot = (dot + 1) % 4;
+        bubble.textContent = '⏳ 로딩 중' + '.'.repeat(dot);
+      }, 500);
+
+      return { row, stop: () => clearInterval(id) };
+    }
+
+    async function typeText(node, text, speed = 14) {
+      const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (reduced) { node.textContent = text; scrollToBottom(); return; }
+
+      node.textContent = '';
+      for (let i = 0; i < text.length; i++) {
+        node.textContent += text[i];
+        if (i % 3 === 0) scrollToBottom();
+        await new Promise(r => setTimeout(r, speed));
+      }
+    }
+
+    async function playDemoOnce() {
+      for (const msg of DEMO_DIALOG) {
+        if (msg.role === 'persona') {
+          const loader = appendLoadingRow();
+          await new Promise(r => setTimeout(r, 420));
+          loader.stop();
+          loader.row.remove();
+
+          const bubble = appendRow('persona', '');
+          await typeText(bubble, msg.text);
+        } else {
+          const bubble = appendRow('user', '');
+          await typeText(bubble, msg.text);
+        }
+        await new Promise(r => setTimeout(r, 360));
+      }
+    }
+
+    async function loopDemo() {
+      while (true) {
+        // persona-info/안내/입력창은 유지, 메시지 행들만 지우기
+        const keep = new Set(wrapper.querySelectorAll('.persona-info, .chat-system-msg-wrapper, .chat-input-container'));
+        [...wrapper.children].forEach(node => { if (!keep.has(node)) node.remove(); });
+
+        await playDemoOnce();
+        await new Promise(r => setTimeout(r, 1400));
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      playDemoOnce().catch(console.error);
+      // loopDemo().catch(console.error); 자동 반복 하고 싶을 때 사용
+    });
+  </script>
 {% endblock %}
