@@ -10,6 +10,21 @@
       color: white;
       border-color: #007bff;
     }
+
+    .persona-modal.hidden {
+      display: none !important;
+      pointer-events: none !important;
+    }
+
+    .persona-modal { position: fixed; inset: 0; z-index: 9999; }
+    .persona-modal__backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.45); }
+    .persona-modal__content {
+      position: relative; max-width: 520px; margin: 10vh auto; background: #111; color: #fff;
+      border-radius: 16px; padding: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+    }
+    .persona-modal__actions { display:flex; gap:12px; justify-content:flex-end; margin-top: 16px; }
+    .persona-modal__content h3 { margin: 0 0 8px 0; font-size: 1.25rem; }
+    .persona-modal__content p { margin: 8px 0; line-height: 1.5; }
   </style>
 {% endblock %}
 
@@ -22,16 +37,16 @@
   <form method="GET" action="{% url 'persona:find_and_chat' %}" id="persona-form">
 
     <div class="form-section">
-      <label>연령대</label>
-      <div class="btn-group" data-input-name="age_group">
-        {% for age in age_options %}<button type="button" class="option-btn">{{ age }}</button>{% endfor %}
+      <label>성별</label>
+      <div class="btn-group" data-input-name="gender">
+        {% for gender in gender_options %}<button type="button" class="option-btn">{{ gender }}</button>{% endfor %}
       </div>
     </div>
 
     <div class="form-section">
-      <label>성별</label>
-      <div class="btn-group" data-input-name="gender">
-        {% for gender in gender_options %}<button type="button" class="option-btn">{{ gender }}</button>{% endfor %}
+      <label>연령대</label>
+      <div class="btn-group" data-input-name="age">
+        {% for age in age_options %}<button type="button" class="option-btn">{{ age }}</button>{% endfor %}
       </div>
     </div>
 
@@ -40,33 +55,26 @@
       <div class="btn-group" data-input-name="job">
         {% for item in job_options %}<button type="button" class="option-btn">{{ item }}</button>{% endfor %}
       </div>
-    <div>
+    </div>
 
     <div class="form-section">
       <label>가족 구성</label>
-      <div class="btn-group" data-input-name="family_structure">
-        {% for item in family_options %}<button type="button" class="option-btn">{{ item }}</button>{% endfor %}
+      <div class="btn-group" data-input-name="household">
+        {% for item in household_options %}<button type="button" class="option-btn">{{ item }}</button>{% endfor %}
       </div>
     </div>
 
     <div class="form-section">
-      <label>고객 취향 <span class="hint">(최대 3개 선택 가능)</span></label>
-      <div class="btn-group multi-select" data-input-name="purchase_pattern" data-max="3">
-        {% for item in purchase_pattern_options %}<button type="button" class="option-btn">{{ item }}</button>{% endfor %}
-      </div>
-    </div>
-    
-    <div class="form-section">
-      <label>고객 가치(RFM)</label>
-      <div class="btn-group" data-input-name="customer_value">
-        {% for item in customer_value_options %}<button type="button" class="option-btn">{{ item }}</button>{% endfor %}
+      <label>소득</label>
+      <div class="btn-group" data-input-name="income_month">
+        {% for item in income_month_options %}<button type="button" class="option-btn">{{ item }}</button>{% endfor %}
       </div>
     </div>
 
     <div class="form-section">
-      <label>라이프스타일 <span class="hint">(다중 선택 가능)</span></label>
-      <div class="btn-group multi-select" data-input-name="lifestyle">
-        {% for item in lifestyle_options %}<button type="button" class="option-btn">{{ item }}</button>{% endfor %}
+      <label>라이프스타일</label>
+      <div class="btn-group" data-input-name="segment">
+        {% for item in segment_options %}<button type="button" class="option-btn">{{ item }}</button>{% endfor %}
       </div>
     </div>
 
@@ -76,51 +84,156 @@
   </form>
 </div>
 
-<script>
-document.addEventListener("DOMContentLoaded", () => {
-  const hiddenInputsContainer = document.getElementById('hidden-inputs');
-  const form = document.getElementById('persona-form');
+<!-- ✅ 모달 마크업 -->
+<div id="persona-modal" class="persona-modal" style="display:none;">
+  <div class="persona-modal__backdrop"></div>
+  <div class="persona-modal__content">
+    <h3 id="persona-modal-title">추천 결과</h3>
+    <p id="persona-modal-body">잠시만요…</p>
+    <div class="persona-modal__actions">
+      <a id="persona-modal-link" href="#" class="submit-btn">채팅으로 이동</a>
+      <button id="persona-modal-close" type="button" class="option-btn">닫기</button>
+    </div>
+  </div>
+</div>
 
-  document.querySelectorAll(".btn-group").forEach(group => {
-    const isMulti = group.classList.contains("multi-select");
-    const max = parseInt(group.dataset.max || "0", 10); // 0이면 제한 없음
-    
-    group.querySelectorAll(".option-btn").forEach(btn => {
-      btn.addEventListener("click", () => {
-        if (isMulti) {
-          if (btn.classList.contains("active")) {
-            // 선택 해제
-            btn.classList.remove("active");
-          } else {
-            const selectedCount = group.querySelectorAll(".option-btn.active").length;
-            if (max > 0 && selectedCount >= max) return;
-            btn.classList.add("active");
-          }
-        } else {
-          group.querySelectorAll(".option-btn").forEach(b => b.classList.remove("active"));
-          btn.classList.add("active");
-        }
-        updateHiddenInputs(); // 버튼 클릭 시 숨겨진 input 업데이트
+<script>
+(function(){
+  const form = document.getElementById('persona-form');
+  const submitBtn = form.querySelector('.submit-btn');
+  const hiddenInputsContainer = document.getElementById('hidden-inputs');
+
+  // 모달 refs
+  const modal = document.getElementById('persona-modal');
+  const modalTitle = document.getElementById('persona-modal-title');
+  const modalBody  = document.getElementById('persona-modal-body');
+  const modalLink  = document.getElementById('persona-modal-link');
+  const modalClose = document.getElementById('persona-modal-close');
+
+  const openModal = ({title, body, linkHref, linkText="채팅으로 이동"}) => {
+    modalTitle.textContent = title || '추천 결과';
+    modalBody.innerHTML = body || '';
+    if (linkHref) {
+      modalLink.style.display = 'inline-flex';
+      modalLink.href = linkHref;
+      modalLink.textContent = linkText;
+    } else {
+      modalLink.style.display = 'none';
+    }
+    modal.style.display = 'block';
+  };
+  const closeModal = () => { modal.style.display = 'none'; };
+  modalClose.addEventListener('click', closeModal);
+  modal.querySelector('.persona-modal__backdrop').addEventListener('click', closeModal);
+
+  // 버튼 클릭 시 active 토글
+  document.querySelectorAll('.btn-group').forEach(group => {
+    group.querySelectorAll('.option-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        group.querySelectorAll('.option-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
       });
     });
   });
 
-  function updateHiddenInputs() {
+  const syncHiddenInputs = () => {
     hiddenInputsContainer.innerHTML = '';
-
     document.querySelectorAll('.btn-group').forEach(group => {
       const inputName = group.dataset.inputName;
       if (!inputName) return;
-
-      group.querySelectorAll('.option-btn.active').forEach(activeBtn => {
+      const active = group.querySelector('.option-btn.active');
+      if (active) {
         const input = document.createElement('input');
-        input.type = 'hidden';
-        input.name = inputName;                     
-        input.value = activeBtn.textContent.trim(); 
+        input.type  = 'hidden';
+        input.name  = inputName;
+        input.value = active.textContent.trim();
         hiddenInputsContainer.appendChild(input);
-      });
+      }
     });
-  }
-});
+  };
+
+  // 폼 비동기 전송
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    // 전송 직전 hidden inputs 동기화
+    syncHiddenInputs();
+
+    // 쿼리스트링 구성 (method="GET")
+    const params = new URLSearchParams(new FormData(form));
+    const url = form.getAttribute('action') + (form.method.toUpperCase()==='GET'
+                 ? `?${params.toString()}`
+                 : '');
+
+    // UX: 로딩상태
+    const prevText = submitBtn.textContent;
+    submitBtn.disabled = true;
+    submitBtn.textContent = '추천 중...';
+
+    try {
+      const resp = await fetch(url, {
+        method: form.method || 'GET',
+        headers: {
+          // 서버가 JSON으로 응답할 수 있다면 우선 시도 (없어도 문제 없음)
+          'Accept': 'application/json, text/html;q=0.9'
+        },
+        credentials: 'same-origin',
+        redirect: 'follow' // 리다이렉트 따라감
+      });
+
+      // 1) 서버가 리다이렉트했을 경우 (chat_view로)
+      if (resp.redirected) {
+        const finalURL = resp.url; // chat_view 최종 URL
+        openModal({
+          title: '가장 알맞은 페르소나를 찾았어요!',
+          body: '선택한 조건을 바탕으로 채팅을 시작할 준비가 되었어요.',
+          linkHref: finalURL,
+          linkText: '채팅 시작하기'
+        });
+        return;
+      }
+
+      // 2) 서버가 JSON 응답을 주는 경우도 대응
+      const contentType = resp.headers.get('Content-Type') || '';
+      if (contentType.includes('application/json')) {
+        const data = await resp.json();
+        // 기대 필드 예시: { persona_id, match_percentage, redirect_url }
+        const link = data.redirect_url ||
+                     (data.persona_id ? `{% url 'chat:chat_view' 0 0 %}`.replace('/0/0', `/${data.persona_id}/0`) : null);
+        const pct  = (typeof data.match_percentage === 'number') ? `${data.match_percentage}%` : null;
+        const msg  = [
+          '추천 결과를 준비했어요.',
+          pct ? `일치율: <strong>${pct}</strong>` : null
+        ].filter(Boolean).join('<br>');
+
+        openModal({
+          title: '추천 완료',
+          body: msg || '추천 결과를 확인해 주세요.',
+          linkHref: link,
+          linkText: '채팅으로 이동'
+        });
+        return;
+      }
+
+      // 3) HTML(리다이렉트 없음)로 온 경우 → 안내만
+      openModal({
+        title: '추천 결과',
+        body: '추천 결과를 확인할 수 없어요. 페이지를 새로고침하거나 다시 시도해 주세요.',
+        linkHref: null
+      });
+
+    } catch (err) {
+      console.error(err);
+      openModal({
+        title: '오류',
+        body: '요청 처리 중 문제가 발생했어요. 잠시 후 다시 시도해 주세요.',
+        linkHref: null
+      });
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = prevText;
+    }
+  });
+})();
 </script>
 {% endblock %}
