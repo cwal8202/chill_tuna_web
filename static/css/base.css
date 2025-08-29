@@ -17,6 +17,7 @@ body {
   padding: 24px 20px;
   background: #ffffff;
   box-sizing: border-box;
+  overflow-y: auto;
 }
 
 .sidebar-header {
@@ -95,14 +96,20 @@ body {
 .chat-item {
   display: flex;
   align-items: center;
-  gap: 10px;
+  /* justify-content: space-between; */
   background: #fff;
   padding: 12px 16px;
   margin-bottom: 12px;
   border-radius: 16px;
   box-shadow: 0 0 0 1px #e5e7eb;
   transition: box-shadow 0.2s ease;
-  cursor: pointer;
+}
+
+.chat-link {
+    text-decoration: none;
+    color: inherit;
+    align-items: center;
+    gap: 10px;
 }
 
 .chat-item:hover {
@@ -214,8 +221,6 @@ body {
   border-radius: 10px;
   position: relative; /* For close button positioning */
   box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19);
-  animation-name: animatetop;
-  animation-duration: 0.4s
 }
 
 /* The Close Button */
@@ -345,4 +350,30 @@ body {
 
 .logout-btn:hover {
   text-decoration: underline;
+}
+
+.chat-badges-container {
+  display: flex;
+  gap: 4px;
+}
+
+.chat-name-wrapper {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.delete-chat-btn {
+    background-color: #f3f4f6;
+    color: #6b7280;
+    border: 1px solid #e5e7eb;
+    padding: 6px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 12px;
+    margin-left: 10px;
+}
+
+.delete-chat-btn:hover {
+    background-color: #e5e7eb;
 }

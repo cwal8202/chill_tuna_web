@@ -14,10 +14,11 @@
   <div class="persona-info">
     <div class="persona-header"><strong>페르소나{{ persona.id }} - {{ persona.name }}</strong></div>
     <div class="persona-tags">
-      <div>{{ persona.age_group }}, {{ persona.gender }}, {{ persona.family_structure }}</div>
-      <div>{{ persona.purchase_pattern|join:", " }}</div>
-      <div>{{ persona.customer_value }}</div>
-      <div>{{ persona.lifestyle|join:", " }}</div>
+      <div>{{ persona.segment }}</div>
+      <div>{{ persona.segment_decription }}</div>
+      <div>{{ persona.age }}, {{ persona.gender }}, {{ persona.job }}</div>
+      <div>{{ persona.marriage }}, {{ persona.education }}, {{ persona.region }}</div>
+      <div>월소득:{{ persona.income_month }}, {{ persona.household }}, {{ persona.income_status }}</div>
     </div>
   </div>
 
@@ -60,7 +61,6 @@
     const chatWrapper = document.querySelector('.chat-wrapper');
     const personaJsonString = chatWrapper.dataset.persona;
     const persona = JSON.parse(personaJsonString);
-    console.log(persona, "@@@@@@@@@@@@@@@@@@@@@@@@@@");
 
     toggleBtn.addEventListener("click", function () {
       if (systemMsg.style.display === "none") {
@@ -142,10 +142,14 @@
           },
           body: JSON.stringify({ message, model, persona_id: personaId, thread_id: currentThreadId })
         });
-        // llm 답변 데이터
+        
         const data = await response.json();
-        console.log(data);
-        console.log("이거 뭔데?");
+
+        if (data.redirect_to_home) {
+            alert(data.error);
+            window.location.href = '/';
+            return;
+        }
 
         // 새채팅이면 base.html 목록에 추가
         if (data.is_new_thread) {

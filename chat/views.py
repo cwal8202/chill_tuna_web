@@ -35,20 +35,19 @@ class ChatView(LoginRequiredMixin, View):
     #               1. 페르소나 id, thread_id로 페르소나, 채팅 내용 가져오기
     #               2. 화면전달 : persona, chat_message, thread_id
     def get(self, request, persona_id, thread_id):
-        print(persona_id, thread_id, "###########################")
         # 1. 페르소나 id, thread_id로 chat_thread, 채팅 내용 가져오기
         chat_thread, chat_messages, error_message = chat_service.get_chat_start_data(request, persona_id, thread_id)
-        persona = chat_thread.persona
-        thread_id = chat_thread.id
+
         if error_message:
             messages.error(request, error_message)
-            print(f"{thread_id}번 채팅 스레드를 찾을 수 없습니다.") # 삭제해야함
-            # return redirect("home")
+            return redirect("home")
+
+        persona = chat_thread.persona
+        thread_id = chat_thread.id
         
         # 3. 화면에 정보전달 : persona, chat_message
         persona_dict = model_to_dict(persona)
         persona_json = json.dumps(persona_dict, ensure_ascii=False)
-        print(persona_json, "@@@@@@@")
         context = {
             "persona": persona,
             "persona_json": persona_json,
@@ -76,18 +75,15 @@ class ChatView(LoginRequiredMixin, View):
 
         # 2) LLM 답변이 온 뒤에 db에 저장. chatthread db, chatmessage db
         llm_output = llm_service.get_llm_response(request, persona_id, user_input, selected_model)
-        chat_thread = None
+        chat_thread, error_message = None, None
         if llm_output:
-            chat_thread = chat_service.save_chat_messsage(request, user_input, persona_id, thread_id, llm_output)
-        ## 2-1) llm 답변으로 chat_thread, chat_message 저장
-        # 3) 화면에 LLM 답변 전달.
+            chat_thread, error_message = chat_service.save_chat_messsage(request, user_input, persona_id, thread_id, llm_output)
 
-        # 3) 화면에 LLM 답변과 새로 생성/업데이트된 thread_id를 전달
+        if error_message:
+            return JsonResponse({"error": error_message, "redirect_to_home": True}, status=404)
+
         if chat_thread:
-            if thread_id:
-                is_new_thread = False
-            else:
-                is_new_thread = True
+            is_new_thread = not thread_id
             response_data = {
                 "persona_msg": llm_output,
                 "thread_id": chat_thread.id,
@@ -134,7 +130,6 @@ class ChatSearchView(LoginRequiredMixin, View):
                         'thread_id': thread_id,
                         'persona_id': msg.thread.persona.id,
                         'persona_name': msg.thread.persona.name,
-                        'persona_summary_tag': msg.thread.persona.persona_summary_tag,
                         'last_message_date': (msg.thread.messages.aggregate(Max('timestamp'))['timestamp__max'] or datetime.now()).strftime("%Y년 %m월 %d일 %H:%M"), # Get last message date of the thread
                         'messages': []
                     }
@@ -156,3 +151,14 @@ class ChatSearchView(LoginRequiredMixin, View):
             results_data = sorted_threads
 
         return JsonResponse({'results': results_data})
+
+class DeleteChatThreadView(LoginRequiredMixin, View):
+    def post(self, request, thread_id):
+        try:
+            chat_thread = ChatThread.objects.get(id=thread_id, user=request.user)
+            chat_thread.delete()
+            return JsonResponse({'status': 'success', 'message': '채팅이 삭제되었습니다.'})
+        except ChatThread.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': '채팅을 찾을 수 없거나 권한이 없습니다.'}, status=404)
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)

@@ -1,26 +1,129 @@
 {% extends 'base.html' %}
+{% load static %}
+
 {% block title %}모든 채팅{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/chat/all_chats.css' %}">
+{% endblock %}
 
 {% block content %}
 <div class="all-chats-container">
-    <h1>모든 채팅</h1>
+    <div class="all-chats-header">
+        <h1>모든 채팅</h1>
+        <div class="search-container">
+            <input type="text" id="chat-search-input" placeholder="채팅 내용 검색...">
+            <button id="chat-search-btn">검색</button>
+        </div>
+    </div>
+
     {% if all_chats %}
-        <ul class="chat-list-full">
-            {% for chat_thread in all_chats %}
-            <li class="chat-item-full">
-                <a href="{% url 'chat:chat_view' chat_thread.persona.id chat_thread.id %}" class="chat-link-full">
-                    <div class="chat-icon-full">💬</div>
-                    <div class="chat-info-full">
-                        <div class="chat-badge-full">{{ chat_thread.persona.persona_summary_tag }}</div>
-                        <div class="chat-name-full">{{ chat_thread.persona.name }}</div>
-                        <div class="chat-date-full">{{ chat_thread.created_at|date:"Y년 m월 d일 H:i" }}</div>
+        <ul class="chat-list-cards">
+            {% for chat in all_chats %}
+            <li class="chat-card">
+                <a href="{% url 'chat:chat_view' chat.persona.id chat.id %}" class="chat-card-link">
+                    <div class="card-header">
+                        <span class="persona-name">{{ chat.persona.name }}</span>
+                        <span class="chat-date">{{ chat.last_updated|date:"Y.m.d" }}</span>
+                    </div>
+                    <div class="card-body">
+                        <p class="last-message">
+                            {% with chat.messages.last as last_message %}
+                                {% if last_message %}
+                                    {{ last_message.message|truncatechars:200 }}
+                                {% else %}
+                                    채팅 내용이 없습니다.
+                                {% endif %}
+                            {% endwith %}
+                        </p>
+                    </div>
+                    <div class="card-footer">
+                        
                     </div>
                 </a>
+                <button class="delete-chat-btn" data-thread-id="{{ chat.id }}">삭제</button>
             </li>
             {% endfor %}
         </ul>
     {% else %}
-        <p>아직 저장된 채팅이 없습니다.</p>
+        <div class="no-chats-message">
+            <p>아직 저장된 채팅이 없습니다.</p>
+        </div>
     {% endif %}
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('chat-search-input');
+    const searchBtn = document.getElementById('chat-search-btn');
+    const chatList = document.querySelector('.chat-list-cards');
+    if (!chatList) return;  // 페이지에 리스트가 없으면 종료
+    const originalChatListHTML = chatList.innerHTML;
+
+    function performSearch() {
+        const query = searchInput.value.trim();
+        if (query === '') {
+            chatList.innerHTML = originalChatListHTML;
+            if (window.App?.addDeleteEventListeners) {
+                window.App.addDeleteEventListeners();
+            }
+            return;
+        }
+
+        fetch(`{% url 'chat:chat_search' %}?q=${encodeURIComponent(query)}`)
+            .then(response => response.json())
+            .then(data => {
+                chatList.innerHTML = ''; // Clear current list
+                if (data.results && data.results.length > 0) {
+                    data.results.forEach(thread => {
+                        const li = document.createElement('li');
+                        li.className = 'chat-card';
+
+                        let messagesHtml = '';
+                        thread.messages.forEach(msg => {
+                            messagesHtml += `<p><strong>${msg.sender}:</strong> ${msg.message}</p>`;
+                        });
+
+                        li.innerHTML = `
+                            <a href="/chat/${thread.persona_id}/${thread.thread_id}/" class="chat-card-link">
+                                <div class="card-header">
+                                    <span class="persona-name">${thread.persona_name}</span>
+                                    <span class="chat-date">${thread.last_message_date}</span>
+                                </div>
+                                <div class="card-body">
+                                    <div class="last-message">${messagesHtml}</div>
+                                </div>
+                                <div class="card-footer">
+                                </div>
+                            </a>
+                            <button class="delete-chat-btn" data-thread-id="${thread.thread_id}">삭제</button>
+                        `;
+                        chatList.appendChild(li);
+                    });
+                    if (window.App?.addDeleteEventListeners) {
+                        window.App.addDeleteEventListeners();
+                    }
+                } else {
+                    chatList.innerHTML = '<div class="no-chats-message"><p>검색 결과가 없습니다.</p></div>';
+                }
+            })
+            .catch(error => {
+                console.error('Error during search:', error);
+                chatList.innerHTML = '<div class="no-chats-message"><p>검색 중 오류가 발생했습니다.</p></div>';
+            });
+    }
+
+    searchBtn.addEventListener('click', performSearch);
+    searchInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            performSearch();
+        }
+    });
+
+    if (window.App?.addDeleteEventListeners) {
+        console.log("클릭됨")
+        window.App.addDeleteEventListeners();
+    }
+});
+</script>
 {% endblock %}

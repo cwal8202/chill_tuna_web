@@ -66,16 +66,16 @@ def save_chat_messsage(request, user_input, persona_id, thread_id, llm_output):
            chat_thread = ChatThread.objects.get(id=thread_id)
            chat_thread.save()
        except ChatThread.DoesNotExist:
-           return None
+           return None, "존재하지 않는 대화입니다."
     
     else:
        persona = persona_service.get_persona_by_id(persona_id)
        if persona is None:
-           return None
+           return None, "페르소나를 찾을 수 없습니다."
        user = request.user if request.user.is_authenticated else None
        chat_thread = ChatThread.objects.create(persona=persona, user=user)
     # fk인 thread_id 에 chat_thread 객체 할당
     ChatMessage.objects.create(thread=chat_thread, sender='user', message=user_input)
     ChatMessage.objects.create(thread=chat_thread, sender='persona', message=llm_output)
     
-    return chat_thread
+    return chat_thread, None

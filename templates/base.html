@@ -10,9 +10,9 @@
   {% block extra_head %}{% endblock %}
 </head>
 <body>
-
+  
   <div class="layout">
-
+    
     <!-- ✅ 사이드바 -->
     <aside class="sidebar">
       <div class="sidebar-header">
@@ -22,7 +22,7 @@
       </div>
 
       <div class="sidebar-title">My Chatbots</div>
-      <button class="sidebar-btn active" onclick="location.href='{% url 'home' %}'">🌍 새 채팅</button>
+      <button class="sidebar-btn active" onclick="location.href='{% url 'persona:create_persona' %}'">🌍 새 채팅</button>
       <button class="sidebar-btn" id="open-search-modal-btn">🔍 채팅 검색</button>
       <button class="sidebar-btn" onclick="location.href='{% url 'chat:all_chats' %}'">📚 모든 채팅 보기</button>
 
@@ -34,10 +34,19 @@
           {% for chat_thread in recent_chats %}
           <li class="chat-item">
             <a href="{% url 'chat:chat_view' chat_thread.persona.id chat_thread.id %}" class="chat-link">
-              <div class="chat-icon-circle">💬</div>
               <div class="chat-info">
-                <div class="chat-badge">{{ chat_thread.persona.persona_summary_tag }}</div>
-                <div class="chat-name">{{ chat_thread.persona.name }}</div>
+                <div class="chat-name-wrapper">
+                  <div class="chat-name">{{ chat_thread.persona.name }}</div>
+                  <button class="delete-chat-btn" data-thread-id="{{ chat_thread.id }}">삭제</button>
+                </div>
+                <div class="chat-badges-container">
+                  <div class="chat-badge">{{ chat_thread.persona.segment }}</div>
+                  <div class="chat-badge">{{ chat_thread.persona.age }}</div>
+                </div>
+                <div class="chat-badges-container">
+                  <div class="chat-badge">{{ chat_thread.persona.household }}</div>
+                  <div class="chat-badge">{{ chat_thread.persona.job }}</div>
+                </div>
               </div>
             </a>
           </li>
@@ -98,8 +107,92 @@
 
 </body>
 <script>
-  document.addEventListener("DOMContentLoaded", function() {
+  // ─────────────────────────────────────────────────────────────
+  // 1) 전역(App) 네임스페이스에 함수 노출 + IIFE로 스코프 보호
+  // ─────────────────────────────────────────────────────────────
+  (function () {
+    // CSRF 토큰을 쿠키에서 안전하게 가져오는 헬퍼
+    function getCsrfToken() {
+      const name = 'csrftoken';
+      const cookies = document.cookie ? document.cookie.split('; ') : [];
+      for (let i = 0; i < cookies.length; i++) {
+        const parts = cookies[i].split('=');
+        const key = decodeURIComponent(parts[0]);
+        if (key === name) {
+          return decodeURIComponent(parts.slice(1).join('='));
+        }
+      }
+      // 폼에 hidden input이 있는 경우 대비(없으면 null)
+      const input = document.querySelector('[name=csrfmiddlewaretoken]');
+      return input ? input.value : null;
+    }
+
+    // 삭제 버튼 이벤트를 한번만 위임 바인딩
+    function addDeleteEventListeners() {
+      if (window.App?._deleteInitDone) return; // 중복 바인딩 방지
+
+      document.addEventListener('click', async function (e) {
+        const btn = e.target.closest('.delete-chat-btn');
+        if (!btn) return;
+
+        e.preventDefault();
+
+        const threadId = btn.dataset.threadId;
+        if (!threadId) return;
+
+        if (!confirm('정말로 이 채팅을 삭제하시겠습니까?')) return;
+
+        const csrftoken = getCsrfToken();
+        if (!csrftoken) {
+          alert('CSRF 토큰을 찾을 수 없습니다. 새로고침 후 다시 시도해주세요.');
+          return;
+        }
+
+        try {
+          const res = await fetch(`/chat/thread/${threadId}/delete/`, {
+            method: 'POST',
+            headers: {
+              'X-CSRFToken': csrftoken,
+              'Content-Type': 'application/json',
+            },
+          });
+          const data = await res.json();
+
+          if (data.status === 'success') {
+            const currentPath = window.location.pathname;
+            const parts = currentPath.split('/').filter(Boolean);
+            if (parts.length === 3 && parts[0] === 'chat' && parts[2] === threadId) {
+              window.location.href = '/';
+            } else {
+              const li = btn.closest('li.chat-item, li.chat-card');
+              if (li) li.remove();
+            }
+          } else {
+            alert('삭제에 실패했습니다: ' + (data.message || '알 수 없는 오류'));
+          }
+        } catch (err) {
+          console.error(err);
+          alert('삭제 중 오류가 발생했습니다.');
+        }
+      }, { passive: true });
+
+      window.App = window.App || {};
+      window.App._deleteInitDone = true;
+    }
+
+    // 필요한 것만 전역으로 노출
+    window.App = window.App || {};
+    window.App.addDeleteEventListeners = addDeleteEventListeners;
+  })();
+
+  // ─────────────────────────────────────────────────────────────
+  // 2) 페이지 공통 초기화 (모달 + 삭제 리스너 실행)
+  //    ※ addDeleteEventListeners는 base에서 한 번만 실행하면 됨
+  // ─────────────────────────────────────────────────────────────
+  document.addEventListener("DOMContentLoaded", function () {
     console.log("DOM Content Loaded.");
+
+    // ===== 모달 관련 기존 코드 (변경 없이 유지) =====
     const openSearchModalBtn = document.getElementById("open-search-modal-btn");
     const searchModal = document.getElementById("searchModal");
     const closeButton = document.querySelector(".close-button");
@@ -107,37 +200,33 @@
     const modalSearchBtn = document.getElementById("modal-search-btn");
     const searchResultsDisplay = document.getElementById("search-results-display");
 
-    // Open modal
     if (openSearchModalBtn) {
       console.log("Search button found.");
-      openSearchModalBtn.addEventListener("click", function() {
+      openSearchModalBtn.addEventListener("click", function () {
         console.log("Search button clicked.");
-        searchModal.style.display = "flex"; // Use flex to center content
+        searchModal.style.display = "flex";
       });
     }
 
-    // Close modal
     if (closeButton) {
-      closeButton.addEventListener("click", function() {
+      closeButton.addEventListener("click", function () {
         searchModal.style.display = "none";
-        searchResultsDisplay.innerHTML = ''; // Clear previous results
-        modalSearchInput.value = ''; // Clear search input
+        searchResultsDisplay.innerHTML = '';
+        modalSearchInput.value = '';
       });
     }
 
-    // Close modal when clicking outside of it
-    window.addEventListener("click", function(event) {
+    window.addEventListener("click", function (event) {
       if (event.target == searchModal) {
         searchModal.style.display = "none";
-        searchResultsDisplay.innerHTML = ''; // Clear previous results
-        modalSearchInput.value = ''; // Clear search input
+        searchResultsDisplay.innerHTML = '';
+        modalSearchInput.value = '';
       }
     });
 
-    // Handle search within modal
     if (modalSearchBtn) {
       modalSearchBtn.addEventListener("click", performModalSearch);
-      modalSearchInput.addEventListener("keydown", function(event) {
+      modalSearchInput.addEventListener("keydown", function (event) {
         if (event.key === "Enter") {
           event.preventDefault();
           performModalSearch();
@@ -160,17 +249,17 @@
           throw new Error(`HTTP error! status: ${response.status}`);
         }
         const data = await response.json();
-        
+
         if (data.error) {
-            searchResultsDisplay.innerHTML = `<p style="color: red;">오류: ${data.error}</p>`;
-            return;
+          searchResultsDisplay.innerHTML = `<p style="color: red;">오류: ${data.error}</p>`;
+          return;
         }
 
         if (data.results && data.results.length > 0) {
           let resultsHtml = '<ul class="search-results-list-modal">';
           data.results.forEach(thread => {
             resultsHtml += `<li class="search-result-item-modal">`;
-            resultsHtml += `<a href="/chat/${thread.persona_id}/${thread.thread_id}/" class="search-result-link-modal">`; // Dynamic URL
+            resultsHtml += `<a href="/chat/${thread.persona_id}/${thread.thread_id}/" class="search-result-link-modal">`;
             resultsHtml += `<div class="search-result-header-modal">`;
             resultsHtml += `<span class="search-result-persona-modal">${thread.persona_name}</span>`;
             resultsHtml += `<span class="search-result-date-modal">${thread.last_message_date}</span>`;
@@ -189,11 +278,15 @@
         } else {
           searchResultsDisplay.innerHTML = '<p>검색 결과가 없습니다.</p>';
         }
-
       } catch (error) {
         console.error("Search failed:", error);
         searchResultsDisplay.innerHTML = `<p style="color: red;">검색 중 오류가 발생했습니다: ${error.message}</p>`;
       }
+    }
+
+    // ===== 여기서 한 번만 초기화: base의 사이드바 삭제 버튼 =====
+    if (window.App?.addDeleteEventListeners) {
+      window.App.addDeleteEventListeners();
     }
   });
 </script>

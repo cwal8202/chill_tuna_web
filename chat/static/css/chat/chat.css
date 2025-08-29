@@ -163,3 +163,9 @@
   margin-top: 8px;
   line-height: 1.5;
 }
+
+.chat-item-full {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
