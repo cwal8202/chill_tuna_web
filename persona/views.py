@@ -9,26 +9,21 @@ import random
 # input      : request
 # output     : HttpResponse (render 또는 redirect)
 # 작성자      : 주용곤
-# 작성일자    : 2025-08-08
+# 작성일자    : 2025-08-28
 # 함수설명    : 
 #               1. GET 요청 시, 페르소나 조건 선택 페이지를 렌더링
 #               2. 해당 페이지의 버튼/폼에 필요한 선택 옵션 목록을 context를 통해 전달
 
 def create_persona(request):
     context = {
-        "age_options": ["20대", "30대", "40대", "50대", "60대 이상", "랜덤"],
-        "gender_options": ["남", "여", "랜덤"],
-        "job_options": ["회사원", "학생", "자영업자", "프리랜서", "은퇴자", "랜덤"],
-        "family_options": ["1인 가구", "부모동거", "부부", "자녀1명", "자녀2명 이상", "기타", "랜덤"],
-        "purchase_pattern_options": [
-            "통조림/즉석/면류", "생수/음료/커피", "과자/떡/베이커리",
-            "냉장/냉동/간편식", "유제품", "건강식품", "랜덤"
-        ],
-        "customer_value_options": [
-            "VIP", "우수고객", "잠재우수고객", "신규고객",
-            "잠재이탈고객", "이탈/휴면고객", "랜덤"
-        ],
-        "lifestyle_options": ["트렌드추종", "가격민감", "브랜드선호", "건강중시", "랜덤"],
+        "age_options": ["랜덤", "20대", "30대", "40대", "50대", "60대 이상"],
+        "gender_options": ["랜덤", "남자", "여자"],
+        "job_options": ["랜덤", "관리자", "군인", "기능원 및 관련 기능 종사자", "농림어업 숙련 종사자", "단순노무 종사자", "사무 종사자",
+            "서비스 종사자", "전문가 및 관련 종사자", "판매 종사자", "장치·기계 조작 및 조립 종사자", "주부", "취업 준비 중", "학생"],
+        "household_options": ["랜덤", "1인 가구", "1세대가족", "2세대가족"],
+        "income_month_options": ["랜덤", "100만원 미만", "100-200만원 미만", "200-300만원 미만", "300-400만원 미만", "400-500만원 미만", 
+            "500-600만원 미만", "600-700만원 미만", "700-800만원 미만", "800-900만원 미만", "900-1000만원 미만", "1,000만원 이상"],
+        "segment_options": ["랜덤", "실속형 미식가", "건강 추구형 소비자", "트렌드 주도형 소비자"],
     }
     return render(request, "persona/create_persona.html", context)
     
@@ -37,33 +32,25 @@ def create_persona(request):
 # input       : request
 # output      : JsonResponse
 # 작성자      : 주용곤
-# 작성일자    : 2025-08-08
+# 작성일자    : 2025-08-28
 # 함수설명    : 
-#               1. 
 
 def build_persona(request):
     options_map = {
-        "age_group": ["20대", "30대", "40대", "50대", "60대 이상", "랜덤"],
-        "gender": ["남", "여", "랜덤"],
-        "family_structure": ["1인 가구", "부모동거", "부부", "자녀1명", "자녀2명 이상", "기타", "랜덤"],
-        "customer_value": ["vip", "우수고객", "잠재우수고객", "신규고객", "잠재이탈고객", "이탈/휴면고객", "랜덤"],
-        "job": ["회사원", "학생", "자영업자", "프리랜서", "은퇴자", "랜덤"],
-        "purchase_pattern": ["통조림/즉석/면류", "생수/음료/커피", "과자/떡/베이커리", "냉장/냉동/간편식", "유제품", "건강식품", "랜덤"],
-        "lifestyle": ["트렌드추종", "가격민감", "브랜드선호", "건강중시", "랜덤"],
+        "age": ["랜덤", "20대", "30대", "40대", "50대", "60대 이상"],
+        "gender": ["랜덤", "남자", "여자"],
+        "job": ["랜덤", "관리자", "군인", "기능원 및 관련 기능 종사자", "농림어업 숙련 종사자", "단순노무 종사자", "사무 종사자",
+            "서비스 종사자", "전문가 및 관련 종사자", "판매 종사자", "장치·기계 조작 및 조립 종사자", "주부", "취업 준비 중", "학생"],
+        "household": ["랜덤", "1인 가구", "1세대가족", "2세대가족"],
+        "income_month": ["랜덤", "100만원 미만", "100-200만원 미만", "200-300만원 미만", "300-400만원 미만", "400-500만원 미만", 
+            "500-600만원 미만", "600-700만원 미만", "700-800만원 미만", "800-900만원 미만", "900-1000만원 미만", "1,000만원 이상"],
+        "segment": ["랜덤", "실속형 미식가", "건강 추구형 소비자", "트렌드 주도형 소비자"],
     }
     
     # 랜덤 선택 헬퍼
     def pick_random_single(options):
         pure = [option for option in options if option != "랜덤"]
         return random.choice(pure) if pure else None
-
-    def pick_random_multi(options, max_count=None):
-        pure = [option for option in options if option != "랜덤"]
-        if max_count is None:
-            cnt = random.randint(1, len(pure))
-        else:
-            cnt = random.randint(1, min(max_count, len(pure)))
-        return random.sample(pure, cnt)
 
     # 단일 처리
     def resolve_single(param_name):
@@ -73,32 +60,14 @@ def build_persona(request):
             return pick_random_single(options)
         return value
 
-    # 다중 처리
-    def resolve_multi(param_name, max_count=None):
-        values = request.GET.getlist(param_name)
-        options = options_map[param_name]
-        if (not values) or ("랜덤" in [v.lower() for v in values]):
-            return pick_random_multi(options, max_count)
-        whitelisted = []
-        seen = set()
-        allow = set([option for option in options if option != "랜덤"])
-        for value in values:
-            if value in allow and value not in seen:
-                whitelisted.append(value)
-                seen.add(value)
-        if max_count and len(whitelisted) > max_count:
-            whitelisted = whitelisted[:max_count]
-        return whitelisted
-
     # 모든 항목 처리
     persona_data = {
-        "나이": resolve_single("age_group"),
         "성별": resolve_single("gender"),
-        "가족구성": resolve_single("family_structure"),
-        "고객가치(rfm)": resolve_single("customer_value"),
+        "나이": resolve_single("age_group"),       
         "직업": resolve_single("job"),
-        "고객취향": resolve_multi("purchase_pattern", max_count=3),
-        "라이프스타일": resolve_multi("lifestyle"),
+        "가족구성": resolve_single("household"), 
+        "소득": resolve_single("income_month"),
+        "라이프스타일": resolve_single("segment"),
     }
 
     return JsonResponse(persona_data, json_dumps_params={"ensure_ascii": False})
@@ -122,51 +91,102 @@ def chat_persona_view(request, persona_id):
 # 함수명      : find_and_chat_view
 # input       : request
 # output      : HttpResponse
-# 작성자      : 박동현
-# 작성일자    : 2025-08-07
+# 작성자      : 주용곤
+# 작성일자    : 2025-08-28
 # 함수설명    : 
-#               1. 사용자가 조건 선택 페이지에서 선택한 조건들을 GET 파라미터로 입력받고 유사도 점수를 계산함
-#               2. 가장 높은 점수를 획득한 페르소나를 '최적 페르소나'로 선정함
+#               1. 사용자가 조건 선택 페이지에서 선택한 조건들을 GET 파라미터로 입력받고 가중치를 계산함
+#               2. 가중치가 페르소나를 '최적 페르소나'로 선정함
 #               3. 선정된 최적 페르소나의 채팅 페이지로 이동해서 인터뷰를 시작
 
-# 페르소나를 찾아 채팅으로 바로 연결하는 함수 (유사도 검색 로직 수정 필요)
+# 페르소나를 찾아 채팅으로 바로 연결하는 함수
 def find_and_chat_view(request):
-    selected_age = request.GET.get('age_group')
-    selected_gender = request.GET.get('gender')
-    selected_family = request.GET.get('family_structure')
-    selected_customer_value = request.GET.get('customer_value')
-    
-    selected_lifestyles = request.GET.getlist('lifestyle') 
+    selected_criteria = {
+        'gender': request.GET.get('gender'),
+        'age': request.GET.get('age'),
+        'job': request.GET.get('job'),
+        'household': request.GET.get('household'),
+        'income_month': request.GET.get('income_month'),
+        'segment': request.GET.get('segment'),
+    }
+
+    RANDOM_OPTIONS = {
+        'gender': ['남자', '여자'],
+        'age': ['20대', '30대', '40대', '50대', '60대 이상'],
+        'job': ["관리자", "군인", "기능원 및 관련 기능 종사자", "농림어업 숙련 종사자", "단순노무 종사자", "사무 종사자",
+                "서비스 종사자", "전문가 및 관련 종사자", "판매 종사자", "장치·기계 조작 및 조립 종사자", "주부", "취업 준비 중", "학생"],
+        'household': ["1인 가구", "1세대가족", "2세대가족"],
+        'income_month': ["100만원 미만", "100-200만원 미만", "200-300만원 미만", "300-400만원 미만", "400-500만원 미만", 
+                         "500-600만원 미만", "600-700만원 미만", "700-800만원 미만", "800-900만원 미만", "900-1000만원 미만", "1,000만원 이상"],
+        'segment': ["실속형 미식가", "건강 추구형 소비자", "트렌드 주도형 소비자"],
+    }
+
+    for key, value in selected_criteria.items():
+        if value == '랜덤' or not value:
+            selected_criteria[key] = random.choice(RANDOM_OPTIONS[key])
+
+    fixed_keys = ['gender', 'age']
+    fixed_weights = {'gender': 5, 'age': 5}
+
+    flexible_weights = {
+        'job': 1,
+        'household': 3,
+        'income_month': 2,
+        'segment': 4,
+    }
 
     all_personas = Persona.objects.all()
-    scores = {}
 
-    for persona in all_personas:
-        score = 0
-        if selected_age and persona.age_group == selected_age:
-            score += 5
-        if selected_gender and persona.gender == selected_gender:
-            score += 5
-        if selected_family and persona.family_structure == selected_family:
-            score += 3
-        if selected_customer_value and persona.customer_value == selected_customer_value:
-            score += 3
+    if not all_personas.exists():
+        return redirect('persona:create_persona')
+    
+    filtered = all_personas
+    for key in fixed_keys:
+        value = selected_criteria.get(key)
+        if value:
+            filtered = filtered.filter(**{key: value})
 
-        if selected_lifestyles and isinstance(persona.lifestyle, list):
-            common_lifestyles = set(selected_lifestyles) & set(persona.lifestyle)
-            score += len(common_lifestyles) * 2
+    if not filtered.exists():
+        return redirect('persona:create_persona')
 
-        scores[persona.id] = score
+    sorted_flexible_keys = sorted(flexible_weights, key=lambda k: -flexible_weights[k])
+    for loosen_level in range(len(sorted_flexible_keys) + 1):
+        active_keys = sorted_flexible_keys[:len(sorted_flexible_keys) - loosen_level]
+        temp_filtered = filtered
 
-    if scores and sum(scores.values()) > 0:
-        best_persona_id = max(scores, key=scores.get)
-        best_persona = Persona.objects.get(id=best_persona_id)
-        # Redirect to chat app's chat view with persona_id and thread_id=0 for a new chat
-        return redirect('chat:chat_view', persona_id=best_persona.id, thread_id=0)
-    else:
-        if all_personas.exists():
-            # Redirect to chat app's chat view with the first persona and thread_id=0
-            return redirect('chat:chat_view', persona_id=all_personas.first().id, thread_id=0)
+        for key in active_keys:
+            value = selected_criteria.get(key)
+            if value:
+                temp_filtered = temp_filtered.filter(**{key: value})
+
+        if temp_filtered.exists():
+            best_persona = random.choice(temp_filtered)
+            break
         else:
-            return redirect('persona:create_persona')
-        
+        # flexible 조건까지 모두 불일치할 경우 → gender/age 일치 대상 중 랜덤
+            best_persona = random.choice(list(filtered))
+
+    matched_fixed_score = sum(
+        fixed_weights[key]
+        for key in fixed_keys
+        if selected_criteria.get(key) and getattr(best_persona, key) == selected_criteria[key]
+    )
+
+    matched_flexible_score = sum(
+        flexible_weights[key]
+        for key in flexible_weights
+        if selected_criteria.get(key) and getattr(best_persona, key) == selected_criteria[key]
+    )
+
+    total_score_possible = sum(fixed_weights.values()) + sum(flexible_weights.values())
+    matched_total_score = matched_fixed_score + matched_flexible_score
+
+    match_percentage = round((matched_total_score / total_score_possible) * 100, 1)
+
+    if request.headers.get("x-requested-with") == "XMLHttpRequest" or request.headers.get("Accept", "").startswith("application/json"):
+        return JsonResponse({
+            "persona_id": best_persona.id,
+            "match_percentage": match_percentage,
+            "redirect_url": f"/chat/{best_persona.id}/0/"
+        })
+
+    return redirect('chat:chat_view', persona_id=best_persona.id, thread_id=0)
