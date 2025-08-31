@@ -22,9 +22,9 @@
       </div>
 
       <div class="sidebar-title">My Chatbots</div>
-      <button class="sidebar-btn active" onclick="location.href='{% url 'persona:create_persona' %}'">🌍 새 채팅</button>
+      <button class="sidebar-btn" data-url="{% url 'persona:create_persona' %}" onclick="location.href='{% url 'persona:create_persona' %}'">🌍 새 채팅</button>
       <button class="sidebar-btn" id="open-search-modal-btn">🔍 채팅 검색</button>
-      <button class="sidebar-btn" onclick="location.href='{% url 'chat:all_chats' %}'">📚 모든 채팅 보기</button>
+      <button class="sidebar-btn" data-url="{% url 'chat:all_chats' %}" onclick="location.href='{% url 'chat:all_chats' %}'">📚 모든 채팅 보기</button>
 
       <hr class="divider">
 
@@ -186,40 +186,71 @@
   //    ※ addDeleteEventListeners는 base에서 한 번만 실행하면 됨
   // ─────────────────────────────────────────────────────────────
   document.addEventListener("DOMContentLoaded", function () {
-    console.log("DOM Content Loaded.");
+    // ===== 사이드바 활성화 함수 =====
+    function updateSidebar() {
+      const currentPath = window.location.pathname;
+      const sidebarButtons = document.querySelectorAll(".sidebar-btn");
 
-    // ===== 모달 관련 기존 코드 (변경 없이 유지) =====
+      // 먼저 모든 버튼에서 active 클래스 제거
+      sidebarButtons.forEach(button => {
+        button.classList.remove("active");
+      });
+
+      // 현재 경로와 일치하는 버튼에 active 클래스 추가
+      sidebarButtons.forEach(button => {
+        const buttonUrl = button.getAttribute('data-url');
+        if (buttonUrl && currentPath === buttonUrl) {
+          button.classList.add("active");
+        }
+      });
+    }
+
+    // ===== 모달 관리 함수 =====
+    function closeModal() {
+      const searchModal = document.getElementById("searchModal");
+      const searchResultsDisplay = document.getElementById("search-results-display");
+      const modalSearchInput = document.getElementById("modal-search-input");
+
+      searchModal.style.display = "none";
+      searchResultsDisplay.innerHTML = '';
+      modalSearchInput.value = '';
+      
+      // 모달이 닫힐 때 사이드바 상태를 현재 URL 기준으로 다시 업데이트
+      updateSidebar();
+    }
+
+    // ===== 이벤트 리스너 바인딩 =====
+
+    // --- 모달 열기 버튼 ---
     const openSearchModalBtn = document.getElementById("open-search-modal-btn");
-    const searchModal = document.getElementById("searchModal");
-    const closeButton = document.querySelector(".close-button");
-    const modalSearchInput = document.getElementById("modal-search-input");
-    const modalSearchBtn = document.getElementById("modal-search-btn");
-    const searchResultsDisplay = document.getElementById("search-results-display");
-
     if (openSearchModalBtn) {
-      console.log("Search button found.");
       openSearchModalBtn.addEventListener("click", function () {
-        console.log("Search button clicked.");
+        // 모든 버튼 비활성화 후, 검색 버튼만 활성화
+        document.querySelectorAll(".sidebar-btn").forEach(btn => btn.classList.remove("active"));
+        this.classList.add("active");
+        
+        const searchModal = document.getElementById("searchModal");
         searchModal.style.display = "flex";
       });
     }
 
+    // --- 모달 닫기 버튼 ---
+    const closeButton = document.querySelector(".close-button");
     if (closeButton) {
-      closeButton.addEventListener("click", function () {
-        searchModal.style.display = "none";
-        searchResultsDisplay.innerHTML = '';
-        modalSearchInput.value = '';
-      });
+      closeButton.addEventListener("click", closeModal);
     }
 
+    // --- 모달 외부 클릭 ---
     window.addEventListener("click", function (event) {
+      const searchModal = document.getElementById("searchModal");
       if (event.target == searchModal) {
-        searchModal.style.display = "none";
-        searchResultsDisplay.innerHTML = '';
-        modalSearchInput.value = '';
+        closeModal();
       }
     });
 
+    // --- 모달 내 검색 기능 ---
+    const modalSearchInput = document.getElementById("modal-search-input");
+    const modalSearchBtn = document.getElementById("modal-search-btn");
     if (modalSearchBtn) {
       modalSearchBtn.addEventListener("click", performModalSearch);
       modalSearchInput.addEventListener("keydown", function (event) {
@@ -232,18 +263,15 @@
 
     async function performModalSearch() {
       const query = modalSearchInput.value.trim();
+      const searchResultsDisplay = document.getElementById("search-results-display");
       if (!query) {
         searchResultsDisplay.innerHTML = '<p>검색어를 입력해주세요.</p>';
         return;
       }
-
       searchResultsDisplay.innerHTML = '<p>검색 중...</p>';
-
       try {
         const response = await fetch(`{% url 'chat:chat_search' %}?q=${encodeURIComponent(query)}`);
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const data = await response.json();
 
         if (data.error) {
@@ -254,20 +282,18 @@
         if (data.results && data.results.length > 0) {
           let resultsHtml = '<ul class="search-results-list-modal">';
           data.results.forEach(thread => {
-            resultsHtml += `<li class="search-result-item-modal">`;
-            resultsHtml += `<a href="/chat/${thread.persona_id}/${thread.thread_id}/" class="search-result-link-modal">`;
-            resultsHtml += `<div class="search-result-header-modal">`;
-            resultsHtml += `<span class="search-result-persona-modal">${thread.persona_name}</span>`;
-            resultsHtml += `<span class="search-result-date-modal">${thread.last_message_date}</span>`;
-            resultsHtml += `</div>`;
-            resultsHtml += `<div class="search-result-thread-title-modal">채팅 스레드 ID: ${thread.thread_id}</div>`;
-            resultsHtml += `<ul class="search-result-messages-modal">`;
-            thread.messages.forEach(msg => {
-              resultsHtml += `<li><span class="search-result-sender-modal">(${msg.sender})</span> ${msg.message}</li>`;
-            });
-            resultsHtml += `</ul>`;
-            resultsHtml += `</a>`;
-            resultsHtml += `</li>`;
+            resultsHtml += `<li class="search-result-item-modal">
+              <a href="/chat/${thread.persona_id}/${thread.thread_id}/" class="search-result-link-modal">
+                <div class="search-result-header-modal">
+                  <span class="search-result-persona-modal">${thread.persona_name}</span>
+                  <span class="search-result-date-modal">${thread.last_message_date}</span>
+                </div>
+                <div class="search-result-thread-title-modal">채팅 스레드 ID: ${thread.thread_id}</div>
+                <ul class="search-result-messages-modal">
+                  ${thread.messages.map(msg => `<li><span class="search-result-sender-modal">(${msg.sender})</span> ${msg.message}</li>`).join('')}
+                </ul>
+              </a>
+            </li>`;
           });
           resultsHtml += '</ul>';
           searchResultsDisplay.innerHTML = resultsHtml;
@@ -280,10 +306,13 @@
       }
     }
 
-    // ===== 여기서 한 번만 초기화: base의 사이드바 삭제 버튼 =====
+    // --- 채팅 삭제 리스너 초기화 ---
     if (window.App?.addDeleteEventListeners) {
       window.App.addDeleteEventListeners();
     }
+    
+    // --- 페이지 로드 시 사이드바 상태 최종 업데이트 ---
+    updateSidebar();
   });
 </script>
 </html>
