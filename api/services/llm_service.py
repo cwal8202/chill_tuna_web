@@ -543,7 +543,7 @@ def _maybe_handle_food_preference(persona, user_input: str) -> Optional[str]:
 def _get_llm_response_impl(
     persona_id: int,
     user_input: str,
-    model_name: str = "gpt-4o-mini",
+    model_name: str = "gpt-5-mini",
     thread_id: Optional[int] = None,
     max_history: int = 16,
     assume_view_pre_saved_user: bool = True,
@@ -629,7 +629,7 @@ def get_llm_response(*args, **kwargs):
         request = args[0]
         persona_id = args[1] if len(args) > 1 else kwargs.get("persona_id")
         user_input = args[2] if len(args) > 2 else kwargs.get("user_input", "")
-        model_name = args[3] if len(args) > 3 else kwargs.get("model_name", "gpt-4o-mini")
+        model_name = args[3] if len(args) > 3 else kwargs.get("model_name", "gpt-5-mini")
         thread_id = kwargs.get("thread_id") or _extract_thread_id_from_request(request)
         return _get_llm_response_impl(persona_id, user_input, model_name, thread_id)
     return _get_llm_response_impl(*args, **kwargs)

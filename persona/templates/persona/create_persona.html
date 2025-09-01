@@ -98,10 +98,11 @@
     font-weight: 700;
   }
 
-  .persona-info p {
-    margin: 0;
+  #persona-details {
+    margin: 8px 0 0;
     color: #4b5563;
     line-height: 1.6;
+    text-align: left;
   }
 
 
@@ -217,7 +218,7 @@
 
     <div class="persona-info">
       <h3 id="persona-name"></h3>
-      <p id="persona-details"></p>
+      <div id="persona-details"></div>
     </div>
 
     <div class="persona-modal__actions">
@@ -258,11 +259,26 @@
     progressCircle.style.setProperty('--progress-percent', pct);
     progressPercent.textContent = `${pct}%`;
     personaName.textContent = `페르소나 ${data.persona_id} - ${data.persona_data.name}`;
-    personaDetails.innerHTML = [
-      `${data.persona_data.age}, ${data.persona_data.gender}, ${data.persona_data.household}`,
-      data.persona_data.job,
-      data.persona_data.segment
-    ].filter(Boolean).join('<br>');
+    
+    const p_data = data.persona_data;
+    const details = [
+        `<strong>나이/성별:</strong> ${p_data.age} / ${p_data.gender}`,
+        `<strong>직업:</strong> ${p_data.job}`,
+        `<strong>가구:</strong> ${p_data.household}`,
+        `<strong>소득:</strong> ${p_data.income_month} (${p_data.income_status})`,
+        `<strong>지역:</strong> ${p_data.region}`,
+        `<strong>학력:</strong> ${p_data.education}`,
+        `<strong>결혼:</strong> ${p_data.marriage}`,
+        `<strong>라이프스타일:</strong> ${p_data.segment}`
+    ];
+    
+    let detailsHtml = details.join('<br>');
+
+    if (p_data.persona_description) {
+        detailsHtml += `<p style="margin-top: 12px;"><strong>페르소나 설명:</strong><br>${p_data.persona_description}</p>`;
+    }
+
+    personaDetails.innerHTML = detailsHtml;
 
     if (data.redirect_url) {
         modalLink.style.display = 'inline-flex';
@@ -364,10 +380,13 @@
       progressCircle.style.display = 'none';
       personaName.textContent = '선택하지 않은 항목이 있습니다';
       // 선택되지 않은 항목 목록을 예쁘게 만듭니다.
-      const itemsList = unselectedItems.map(item => `<li>${item}</li>`).join('');
+      const itemsList = unselectedItems.map(item => `<li>- ${item}</li>`).join('');
       personaDetails.innerHTML = `
-        <ul style="list-style:none; padding:0; margin-top:12px; text-align:left;">${itemsList}</ul>
-        <p style="margin-top:16px;">선택하지 않은 항목은 랜덤으로 지정됩니다.<br>이대로 계속 진행할까요?</p>
+        <span>아래 항목은 랜덤으로 지정됩니다:</span>
+        <ul style="list-style: none; padding-left: 10px; margin-top: 8px; margin-bottom: 16px;">
+          ${itemsList}
+        </ul>
+        <span>이대로 계속 진행할까요?</span>
       `;
       
       modalLink.style.display = 'inline-flex';

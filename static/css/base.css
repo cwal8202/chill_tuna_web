@@ -40,6 +40,12 @@ body {
   margin-left: 4px;
 }
 
+.logo-img {
+  width: 32px;
+  height: 32px;
+  margin-right: 8px;
+}
+
 .sidebar-title {
   font-size: 14px;
   font-weight: 600;
@@ -62,6 +68,14 @@ body {
   transition: background-color 0.2s;
   text-decoration: none; /* Ensure no underline for links */
   color: #111827; /* Explicitly set color for links */
+  display: flex;
+  align-items: center;
+}
+
+.sidebar-btn-img {
+  width: 32px;
+  height: 32px;
+  margin-right: 12px;
 }
 
 .sidebar-btn:hover {

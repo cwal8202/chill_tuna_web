@@ -14,11 +14,19 @@
   <div class="persona-info">
     <div class="persona-header"><strong>페르소나{{ persona.id }} - {{ persona.name }}</strong></div>
     <div class="persona-tags">
-      <div>{{ persona.segment }}</div>
-      <div>{{ persona.segment_decription }}</div>
-      <div>{{ persona.age }}, {{ persona.gender }}, {{ persona.job }}</div>
-      <div>{{ persona.marriage }}, {{ persona.education }}, {{ persona.region }}</div>
-      <div>월소득:{{ persona.income_month }}, {{ persona.household }}, {{ persona.income_status }}</div>
+      <dl>
+        <dt>라이프스타일</dt>
+        <dd>{{ persona.segment }} - {{ persona.segment_decription }}</dd>
+        
+        <dt>인구통계</dt>
+        <dd>{{ persona.age }}, {{ persona.gender }}, {{ persona.job }}</dd>
+
+        <dt>추가정보</dt>
+        <dd>{{ persona.marriage }}, {{ persona.education }}, {{ persona.region }}</dd>
+
+        <dt>소득/가구</dt>
+        <dd>월소득:{{ persona.income_month }}, {{ persona.household }}, {{ persona.income_status }}</dd>
+      </dl>
     </div>
   </div>
 

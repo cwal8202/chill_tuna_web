@@ -34,12 +34,9 @@
 
     /* 스크롤 영역은 중앙 정렬 컨테이너 역할만 */
     .home-demo-scroll {
-      height: 700px;
       padding: 20px;
       background: #fff;
-      overflow-y: auto;
       overflow-x: hidden;                 /* 좌우 스크롤 방지 */
-      scroll-behavior: smooth;
 
       display: flex;                      /* 중앙에 고정 */
       justify-content: center;
@@ -189,7 +186,6 @@
 
     // 유틸
     function el(tag, cls) { const n = document.createElement(tag); if (cls) n.className = cls; return n; }
-    function scrollToBottom() { scrollArea.scrollTop = scrollArea.scrollHeight; }
 
     function appendRow(role, text) {
       const row = el('div', `chat-row ${role === 'user' ? 'user' : 'persona'}`);
@@ -199,7 +195,6 @@
       // 입력창(form) 앞에만 메시지를 삽입해서 입력창이 항상 맨 아래에 유지되도록
       const inputForm = wrapper.querySelector('.chat-input-container');
       wrapper.insertBefore(row, inputForm);
-      scrollToBottom();
       return bubble;
     }
 
@@ -211,7 +206,6 @@
       row.appendChild(bubble);
       const inputForm = wrapper.querySelector('.chat-input-container');
       wrapper.insertBefore(row, inputForm);
-      scrollToBottom();
 
       // 점점점 애니메이션
       let dot = 0;
@@ -225,12 +219,11 @@
 
     async function typeText(node, text, speed = 14) {
       const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      if (reduced) { node.textContent = text; scrollToBottom(); return; }
+      if (reduced) { node.textContent = text; return; }
 
       node.textContent = '';
       for (let i = 0; i < text.length; i++) {
         node.textContent += text[i];
-        if (i % 3 === 0) scrollToBottom();
         await new Promise(r => setTimeout(r, speed));
       }
     }

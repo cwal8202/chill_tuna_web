@@ -16,15 +16,16 @@
     <!-- ✅ 사이드바 -->
     <aside class="sidebar">
       <div class="sidebar-header">
-        <a href="{% url 'home' %}" class="logo-link">
-          🌀 <span class="logo-text">Chill Tuna</span>
+        <a href="{% url 'home' %}" class="logo-link" style="display: flex; align-items: center;">
+          <img src="{% static 'img/logo.png' %}" alt="Chill Tuna Logo" class="logo-img">
+          <span class="logo-text">Chill Tuna</span>
         </a>
       </div>
 
       <div class="sidebar-title">My Chatbots</div>
-      <button class="sidebar-btn" data-url="{% url 'persona:create_persona' %}" onclick="location.href='{% url 'persona:create_persona' %}'">🌍 새 채팅</button>
-      <button class="sidebar-btn" id="open-search-modal-btn">🔍 채팅 검색</button>
-      <button class="sidebar-btn" data-url="{% url 'chat:all_chats' %}" onclick="location.href='{% url 'chat:all_chats' %}'">📚 모든 채팅 보기</button>
+      <button class="sidebar-btn" data-url="{% url 'persona:create_persona' %}" onclick="location.href='{% url 'persona:create_persona' %}'"><img src="{% static 'img/chat.png' %}" alt="새 채팅" class="sidebar-btn-img"> 새 채팅</button>
+      <button class="sidebar-btn" id="open-search-modal-btn"><img src="{% static 'img/search.png' %}" alt="채팅 검색" class="sidebar-btn-img"> 채팅 검색</button>
+      <button class="sidebar-btn" data-url="{% url 'chat:all_chats' %}" onclick="location.href='{% url 'chat:all_chats' %}'"><img src="{% static 'img/all_chat.png' %}" alt="모든 채팅 보기" class="sidebar-btn-img"> 모든 채팅 보기</button>
 
       <hr class="divider">
 
@@ -60,8 +61,8 @@
       <!-- 본문 헤더 -->
       <div class="main-header">
         <select class="model-selector">
+          <option>gpt-5-mini</option>
           <option>gpt-4o-mini</option>
-          <option>gpt-5-nano</option>
         </select>
         <div class="user-auth">
           {% if user.is_authenticated %}
@@ -261,6 +262,11 @@
     }
 
     async function performModalSearch() {
+      {% if not user.is_authenticated %}
+        document.getElementById("search-results-display").innerHTML = '<p>로그인이 필요한 기능입니다.</p>';
+        return;
+      {% endif %}
+
       const query = modalSearchInput.value.trim();
       const searchResultsDisplay = document.getElementById("search-results-display");
       if (!query) {

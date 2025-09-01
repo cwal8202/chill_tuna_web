@@ -194,8 +194,13 @@ def find_and_chat_view(request):
                 "age": best_persona.age,
                 "household": best_persona.household,
                 "job": best_persona.job,
+                "region": best_persona.region,
+                "education": best_persona.education,
+                "income_month": best_persona.income_month,
+                "income_status": best_persona.income_status,
+                "marriage" : best_persona.marriage,
                 "segment": best_persona.segment,
-                "persona_summary_tag": best_persona.persona_summary_tag 
+                # "persona_summary_tag": best_persona.persona_summary_tag 
             }
         })
 
