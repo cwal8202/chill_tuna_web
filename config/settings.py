@@ -24,10 +24,14 @@ from decouple import config
 SECRET_KEY = config("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
-ALLOWED_HOSTS = []
-# 배포를 위한 허용된 호스트 목록
+# ALLOWED_HOSTS = []
+# pythonwhere 배포를 위한 허용된 호스트 목록
+ALLOWED_HOSTS = [
+    'chilltuna.pythonanywhere.com'
+]
+# AWS 배포를 위한 허용된 호스트 목록
 # ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='').split(',')
 
 
@@ -140,9 +144,12 @@ USE_TZ = False
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = "static/"
-STATICFILES_DIRS = [
-    BASE_DIR / 'static',  # 전역 static 디렉토리 경로
-]
+# STATICFILES_DIRS = [
+#     BASE_DIR / 'static',  # 전역 static 디렉토리 경로
+# ]
+
+import os
+STATIC_ROOT = os.path.join(BASE_DIR, '.staticfiles')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
